@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_new/controllers/cart_controller.dart';
+import 'package:task_new/controllers/verification_controller.dart';
 import 'package:task_new/screens/payment_success_screen.dart';
 import 'package:task_new/services/razorpay_service.dart';
 import 'package:task_new/utils/app_colors.dart';
+import 'package:task_new/screens/verification_dialog.dart';
 import 'package:task_new/widgets/custom_alert_dialogue.dart';
+import 'package:task_new/widgets/discount_offer_card.dart';
+import 'package:task_new/widgets/cart_summary_card.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -83,9 +87,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final cartController = ref.watch(cartProvider);
+    final verificationService = ref.watch(verificationServiceProvider);
     final subtotal = cartController.subtotal;
     final deliveryFee = _getDeliveryFee();
-    final total = subtotal + deliveryFee;
+
+    // Calculate discount
+    final discountAmount =
+        verificationService.isEligibleForDiscount(
+          cartController.items,
+          subtotal + deliveryFee,
+        )
+        ? verificationService.calculateDiscount(subtotal + deliveryFee)
+        : 0.0;
+
+    final total = subtotal + deliveryFee - discountAmount;
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
@@ -109,6 +124,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Discount Offer Card
+                  DiscountOfferCard(
+                    subtotal: subtotal,
+                    deliveryFee: deliveryFee,
+                  ),
+
                   // Delivery Address Section
                   _buildSectionCard(
                     title: 'Delivery Address',
@@ -229,75 +250,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   const SizedBox(height: 20),
 
                   // Order Summary Section
-                  _buildSectionCard(
-                    title: 'Order Summary',
-                    child: Column(
-                      children: [
-                        // Cart Items
-                        ...cartController.items.map(
-                          (item) => Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Image.asset(item.product.imageUrl),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.product.name,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${item.quantity}x ${item.selectedUnit}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  '₹${(item.product.units.firstWhere((u) => u.unitName == item.selectedUnit).price * item.quantity).toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.darkGreen,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const Divider(height: 24, thickness: 1),
-
-                        // Price Breakdown
-                        _buildPriceRow('Subtotal', subtotal),
-                        const SizedBox(height: 8),
-                        _buildPriceRow('Delivery Fee', deliveryFee),
-                        const SizedBox(height: 8),
-                        _buildPriceRow('Tax', 0.0),
-
-                        const Divider(height: 24, thickness: 1),
-
-                        _buildPriceRow('Total', total, isTotal: true),
-                      ],
-                    ),
+                  CartSummaryCard(
+                    subtotal: subtotal,
+                    deliveryFee: deliveryFee,
+                    total: total,
                   ),
 
                   const SizedBox(height: 100), // Space for bottom button
@@ -555,7 +511,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  Widget _buildPriceRow(String label, double amount, {bool isTotal = false}) {
+  Widget _buildPriceRow(
+    String label,
+    double amount, {
+    bool isTotal = false,
+    bool isDiscount = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -564,15 +525,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           style: TextStyle(
             fontSize: isTotal ? 16 : 14,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-            color: isTotal ? Colors.black87 : Colors.grey[600],
+            color: isTotal
+                ? Colors.black87
+                : (isDiscount ? Colors.green[700] : Colors.grey[600]),
           ),
         ),
         Text(
-          '₹${amount.toStringAsFixed(2)}',
+          '₹${amount.abs().toStringAsFixed(2)}',
           style: TextStyle(
             fontSize: isTotal ? 16 : 14,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-            color: isTotal ? AppColors.darkGreen : Colors.black87,
+            color: isTotal
+                ? AppColors.darkGreen
+                : (isDiscount ? Colors.green[700] : Colors.black87),
           ),
         ),
       ],
@@ -639,7 +604,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   void _handlePlaceOrder() {
     debugPrint('Selected payment method: $selectedPaymentMethod');
-    
+
     if (selectedPaymentMethod == 'razorpay') {
       debugPrint('Processing Razorpay payment...');
       _processRazorpayPayment();
@@ -702,7 +667,140 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   double _getTotalAmount() {
     final cartController = ref.read(cartProvider);
-    return cartController.subtotal + _getDeliveryFee();
+    final verificationService = ref.read(verificationServiceProvider);
+    final subtotal = cartController.subtotal;
+    final deliveryFee = _getDeliveryFee();
+
+    // Calculate discount
+    final discountAmount =
+        verificationService.isEligibleForDiscount(
+          cartController.items,
+          subtotal + deliveryFee,
+        )
+        ? verificationService.calculateDiscount(subtotal + deliveryFee)
+        : 0.0;
+
+    return subtotal + deliveryFee - discountAmount;
+  }
+
+  Widget _buildVerificationBanner(verificationService, double discountAmount) {
+    if (verificationService.isVerified && discountAmount > 0) {
+      // Show success banner for verified users with discount
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.green[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green[200]!),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.verified_user,
+                color: Colors.green[700],
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '🎉 Animal Kart Discount Applied!',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green[800],
+                    ),
+                  ),
+                  Text(
+                    'You saved ₹${discountAmount.toStringAsFixed(2)} on this order',
+                    style: TextStyle(fontSize: 14, color: Colors.green[700]),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (!verificationService.isVerified) {
+      // Show verification offer banner
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.darkGreen.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.darkGreen.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.darkGreen.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.local_offer,
+                color: AppColors.darkGreen,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Animal Kart User? Get 10% OFF!',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.darkGreen,
+                    ),
+                  ),
+                  const Text(
+                    'Verify your account for instant discount',
+                    style: TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () => _showVerificationDialog(),
+              style: TextButton.styleFrom(
+                backgroundColor: AppColors.darkGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Verify'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+  }
+
+  void _showVerificationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const VerificationDialog(),
+    );
   }
 
   @override

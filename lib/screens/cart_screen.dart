@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
 import 'package:task_new/controllers/cart_controller.dart';
+import 'package:task_new/controllers/verification_controller.dart';
 import 'package:task_new/models/product_model.dart';
 import 'package:task_new/utils/app_colors.dart';
 import 'package:task_new/utils/svg_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:task_new/widgets/custom_alert_dialogue.dart';
+import 'package:task_new/widgets/discount_offer_card.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -87,9 +89,22 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: cartItems.length,
+                    itemCount: cartItems.length + 1, // +1 for discount offer card
                     itemBuilder: (context, index) {
-                      final item = cartItems[index];
+                      // Show discount offer card as first item
+                      if (index == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: DiscountOfferCard(
+                            subtotal: cartViewController.subtotal,
+                            deliveryFee: 2.99, // Default delivery fee
+                          ),
+                        );
+                      }
+                      
+                      // Adjust index for cart items
+                      final cartIndex = index - 1;
+                      final item = cartItems[cartIndex];
                       final product = item.product;
                       final unit = item.selectedUnit;
                       final price = product.units

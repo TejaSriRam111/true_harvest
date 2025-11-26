@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_new/utils/app_colors.dart';
 import 'package:task_new/routes/app_routes.dart';
+import 'package:task_new/controllers/verification_controller.dart';
+import 'package:task_new/screens/verification_dialog.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -124,6 +126,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildProfileHeader() {
+    final verificationService = ref.watch(verificationServiceProvider);
+    final userProfile = verificationService.userProfile;
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -155,24 +160,82 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'John Doe',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      userProfile?.name ?? 'John Doe',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    if (verificationService.isVerified) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green[100],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.verified, size: 14, color: Colors.green[700]),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Verified',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'john.doe@example.com',
+                  userProfile?.email ?? 'john.doe@example.com',
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '+91 9876543210',
+                  userProfile?.mobile ?? '+91 9876543210',
                   style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                 ),
+                if (!verificationService.isVerified) ...[
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () => _showVerificationDialog(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.darkGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.darkGreen.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.local_offer, size: 14, color: AppColors.darkGreen),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Verify for 10% discount',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.darkGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -563,6 +626,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showVerificationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const VerificationDialog(),
     );
   }
 }
