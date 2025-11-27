@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/legacy.dart';
-import 'package:google_fonts/google_fonts.dart'; // For Montserrat font
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_new/controllers/cart_controller.dart';
 import 'package:task_new/routes/app_routes.dart';

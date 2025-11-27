@@ -6,7 +6,7 @@ import 'package:task_new/controllers/verification_controller.dart';
 import 'package:task_new/screens/verification_dialog.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -128,7 +128,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildProfileHeader() {
     final verificationService = ref.watch(verificationServiceProvider);
     final userProfile = verificationService.userProfile;
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -173,7 +173,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     if (verificationService.isVerified) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green[100],
                           borderRadius: BorderRadius.circular(12),
@@ -181,7 +184,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.verified, size: 14, color: Colors.green[700]),
+                            Icon(
+                              Icons.verified,
+                              size: 14,
+                              color: Colors.green[700],
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'Verified',
@@ -212,16 +219,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   GestureDetector(
                     onTap: () => _showVerificationDialog(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.darkGreen.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.darkGreen.withOpacity(0.3)),
+                        border: Border.all(
+                          color: AppColors.darkGreen.withOpacity(0.3),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.local_offer, size: 14, color: AppColors.darkGreen),
+                          Icon(
+                            Icons.local_offer,
+                            size: 14,
+                            color: AppColors.darkGreen,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Verify for 10% discount',
