@@ -1,9 +1,9 @@
 // lib/screens/each_item_view.dart
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_new/controllers/cart_controller.dart';
 import 'package:task_new/controllers/whishlist_provider.dart';
-import 'package:task_new/models/advanced_subscription_model.dart';
 import 'package:task_new/models/cart_item.dart';
 import 'package:task_new/models/product_model.dart';
 import 'package:task_new/screens/cart_screen.dart';
@@ -11,8 +11,6 @@ import 'package:task_new/screens/subscription_plan_screen.dart';
 import 'package:task_new/utils/app_colors.dart';
 import 'package:task_new/utils/app_constants.dart';
 import 'package:task_new/widgets/quantity_handler.dart';
-import 'package:dotted_border/dotted_border.dart';
-
 
 class ProductDetailsView extends ConsumerStatefulWidget {
   final Product product;
@@ -35,12 +33,12 @@ class _EachItemViewState extends ConsumerState<ProductDetailsView> {
   void initState() {
     super.initState();
     // _scrollController.addListener(_onScroll);
-   final isItemsInCart = ref.read(cartProvider).items.isNotEmpty;
-   if(isItemsInCart){
-    setState(() {
-      _showGoToCart = true;
-    });
-   }
+    final isItemsInCart = ref.read(cartProvider).items.isNotEmpty;
+    if (isItemsInCart) {
+      setState(() {
+        _showGoToCart = true;
+      });
+    }
   }
 
   // void _onScroll() {
@@ -61,11 +59,12 @@ class _EachItemViewState extends ConsumerState<ProductDetailsView> {
   @override
   Widget build(BuildContext context) {
     final cartItems = ref.watch(cartProvider).items;
-    
+
     // Check if current product is in cart
     final isItemInCart = cartItems.any(
-      (item) => item.product.id == widget.product.id && 
-               item.selectedUnit == widget.product.units[selectedUnitIndex].unitName
+      (item) =>
+          item.product.id == widget.product.id &&
+          item.selectedUnit == widget.product.units[selectedUnitIndex].unitName,
     );
 
     // Update local state if needed
@@ -87,7 +86,7 @@ class _EachItemViewState extends ConsumerState<ProductDetailsView> {
       orElse: () => CartItem(
         product: widget.product,
         selectedUnit: widget.product.units[selectedUnitIndex].unitName,
-        quantity: 0
+        quantity: 0,
       ),
     );
 
@@ -99,14 +98,14 @@ class _EachItemViewState extends ConsumerState<ProductDetailsView> {
           SliverAppBar(
             expandedHeight: 400,
             pinned: true,
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.white,
             elevation: 0,
             leading: Padding(
               padding: const EdgeInsets.all(8.0),
               child: CircleAvatar(
                 backgroundColor: Colors.black54,
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: const Icon(Icons.arrow_back, color: AppColors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -195,77 +194,83 @@ class _EachItemViewState extends ConsumerState<ProductDetailsView> {
 
                           final isSelected = selectedUnitIndex == index;
 
-                          return 
-                          GestureDetector(
-  onTap: () {
-    setState(() {
-      selectedUnitIndex = index;
-    });
-  },
-  child: DottedBorder(
-    color: isSelected ? AppColors.darkGreen : Colors.grey,
-    strokeWidth: 1.2,
-    dashPattern: [5, 4],
-    borderType: BorderType.RRect,
-    radius: const Radius.circular(16),
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedUnitIndex = index;
+                              });
+                            },
+                            child: DottedBorder(
+                              color: isSelected
+                                  ? AppColors.darkGreen
+                                  : AppColors.grey,
+                              strokeWidth: 1.2,
+                              dashPattern: [5, 4],
+                              borderType: BorderType.RRect,
+                              radius: const Radius.circular(16),
 
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected 
-            ? AppColors.darkGreen.withOpacity(0.08)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        unit.unitName,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: isSelected ? AppColors.darkGreen : Colors.grey,
-        ),
-      ),
-    ),
-  ),
-);
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.darkGreen.withOpacity(0.08)
+                                      : AppColors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(
+                                  unit.unitName,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected
+                                        ? AppColors.darkGreen
+                                        : AppColors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
 
-//                           DottedBorder(
-//   color: isSelected ? AppColors.darkGreen : Colors.grey,
-//   strokeWidth: 1.2,
-//   dashPattern: [5, 4],
-//   borderType: BorderType.RRect,
-//   radius: const Radius.circular(18),
+                          //                           DottedBorder(
+                          //   color: isSelected ? AppColors.darkGreen : Colors.grey,
+                          //   strokeWidth: 1.2,
+                          //   dashPattern: [5, 4],
+                          //   borderType: BorderType.RRect,
+                          //   radius: const Radius.circular(18),
 
-//   // Add padding for clean spacing
-//   child: Padding(
-//     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                          //   // Add padding for clean spacing
+                          //   child: Padding(
+                          //     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
 
-//     child: ChoiceChip(
-//       shape: RoundedRectangleBorder(
-//         borderRadius: BorderRadius.circular(16),
-//       ),
-//       labelPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          //     child: ChoiceChip(
+                          //       shape: RoundedRectangleBorder(
+                          //         borderRadius: BorderRadius.circular(16),
+                          //       ),
+                          //       labelPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
 
-//       label: Text(
-//         unit.unitName,
-//         style: TextStyle(
-//           color: isSelected ? Colors.white : AppColors.darkGreen,
-//           fontWeight: FontWeight.bold,
-//         ),
-//       ),
+                          //       label: Text(
+                          //         unit.unitName,
+                          //         style: TextStyle(
+                          //           color: isSelected ? Colors.white : AppColors.darkGreen,
+                          //           fontWeight: FontWeight.bold,
+                          //         ),
+                          //       ),
 
-//       selected: isSelected,
-//       selectedColor: AppColors.darkGreen,
-//       backgroundColor: Colors.transparent, // let dotted border show cleanly
+                          //       selected: isSelected,
+                          //       selectedColor: AppColors.darkGreen,
+                          //       backgroundColor: Colors.transparent, // let dotted border show cleanly
 
-//       onSelected: (_) {
-//         setState(() {
-//           selectedUnitIndex = index;
-//         });
-//       },
-//     ),
-//   ),
-// );
+                          //       onSelected: (_) {
+                          //         setState(() {
+                          //           selectedUnitIndex = index;
+                          //         });
+                          //       },
+                          //     ),
+                          //   ),
+                          // );
 
                           // ChoiceChip(
                           //   label: Text(
@@ -291,33 +296,31 @@ class _EachItemViewState extends ConsumerState<ProductDetailsView> {
                     ],
                   ),
 
-                  const SizedBox(height: 16),
-
-                  // Quantity Selector
-                  const Text(
-                    'Quantity',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  // Then in your widget tree:
-                  // In your ProductDetailsView build method
-                  // In your product_details_view.dart, update the QuantityHandler usage:
-                  QuantityHandler(
-                    product: widget.product,
-                    unit: widget.product.units[selectedUnitIndex].unitName,
-                    initialQuantity: cartItem.quantity,
-                    onQuantityChanged: (newQuantity) {
-                      // final cartController = ref.read(cartProvider);
-                      cartProviderController.updateQuantity(
-                        widget.product,
-                        widget.product.units[selectedUnitIndex].unitName,
-                        newQuantity,
-                      );
-                      setState(() {
-                        quantity = newQuantity;
-                      });
-                    },
-                  ),
+                  // // Quantity Selector
+                  // const Text(
+                  //   'Quantity',
+                  //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  // ),
+                  // const SizedBox(height: 12),
+                  // // Then in your widget tree:
+                  // // In your ProductDetailsView build method
+                  // // In your product_details_view.dart, update the QuantityHandler usage:
+                  // QuantityHandler(
+                  //   product: widget.product,
+                  //   unit: widget.product.units[selectedUnitIndex].unitName,
+                  //   initialQuantity: cartItem.quantity,
+                  //   onQuantityChanged: (newQuantity) {
+                  //     // final cartController = ref.read(cartProvider);
+                  //     cartProviderController.updateQuantity(
+                  //       widget.product,
+                  //       widget.product.units[selectedUnitIndex].unitName,
+                  //       newQuantity,
+                  //     );
+                  //     setState(() {
+                  //       quantity = newQuantity;
+                  //     });
+                  //   },
+                  // ),
                   const SizedBox(height: 25),
 
                   // Description
@@ -376,170 +379,187 @@ class _EachItemViewState extends ConsumerState<ProductDetailsView> {
         ],
       ),
       bottomNavigationBar: Container(
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.2),
-          spreadRadius: 1,
-          blurRadius: 5,
-          offset: const Offset(0, -2),
-        ),
-      ],
-    ),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if(widget.product.category.isMilk || widget.product.category.isCurd || widget.product.category.isButter || widget.product.category.isdryFruits || widget.product.category.issprouts || widget.product.category.isfruit)
-        // Subscription Button
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _goToSubscription,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.darkGreen,
-              side: BorderSide(color: AppColors.darkGreen),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.subscriptions, size: 18),
-            label: const Text(
-              'Subscribe & Save',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-    
-        // Only show Add to Cart and Buy Now buttons if product is not Milk, Curd, or Butter
-        if (!widget.product.category.isMilk && 
-            !widget.product.category.isCurd && 
-            !widget.product.category.isButter&& !widget.product.category.isdryFruits&& !widget.product.category.issprouts&& !widget.product.category.isfruit) 
-        Row(
-          children: [
-            Expanded(
-  child: AnimatedSwitcher(
-    duration: const Duration(milliseconds: 300),
-    transitionBuilder: (Widget child, Animation<double> animation) {
-      return ScaleTransition(
-        scale: animation,
-        child: child,
-      );
-    },
-    child: _showGoToCart
-        ? ElevatedButton(
-            key: const ValueKey("goToCart"),
-            onPressed: _goToCart,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: AppColors.darkGreen,
-              minimumSize: const Size(double.infinity, 54), // Added height
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text(
-              "Go to Cart",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          )
-        : ElevatedButton.icon(
-            key: const ValueKey("addToCart"),
-            onPressed: _handleAddToCart,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: AppColors.primary,
-              minimumSize: const Size(double.infinity, 54), // Added same height
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.shopping_cart_outlined),
-            label: const Text('Add to Cart'),
-          ),
-  ),
-),
-            
-              // Expanded(
-              //   child: _showGoToCart
-              //       ? ElevatedButton(
-              //           key: const ValueKey("goToCart"),
-              //           onPressed: _goToCart,
-              //           style: ElevatedButton.styleFrom(
-              //             padding: const EdgeInsets.symmetric(vertical: 16),
-              //             backgroundColor: AppColors.darkGreen,
-              //             minimumSize: const Size(double.infinity, 42),
-              //             shape: RoundedRectangleBorder(
-              //               borderRadius: BorderRadius.circular(10),
-              //             ),
-              //           ),
-              //           child: const Text(
-              //             "Go to Cart",
-              //             style: TextStyle(
-              //               color: Colors.white,
-              //               fontSize: 14,
-              //               fontWeight: FontWeight.bold,
-              //             ),
-              //           ),
-              //         )
-              //       : ElevatedButton.icon(
-              //           onPressed: _handleAddToCart,
-              //           style: ElevatedButton.styleFrom(
-              //             padding: const EdgeInsets.symmetric(vertical: 16),
-              //             backgroundColor: AppColors.primary,
-              //             shape: RoundedRectangleBorder(
-              //               borderRadius: BorderRadius.circular(12),
-              //             ),
-              //           ),
-              //           icon: const Icon(Icons.shopping_cart_outlined),
-              //           label: const Text('Add to Cart'),
-              //         ),
-              // ),
-            
-              const SizedBox(width: 16),
-            
-            // Buy Now Button - Always visible
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _isBuyingNow ? null : _handleBuyNow,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: AppColors.darkGreen,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isBuyingNow
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Text(
-                        'Buy Now',
-                        style: TextStyle(color: AppColors.white),
-                      ),
-              ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, -2),
             ),
           ],
         ),
-      ],
-    ),
-  ),
-);
-}
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.product.category.isMilk ||
+                widget.product.category.isCurd ||
+                widget.product.category.isButter ||
+                widget.product.category.isdryFruits ||
+                widget.product.category.issprouts ||
+                widget.product.category.isfruit)
+              // Subscription Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _goToSubscription,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.darkGreen,
+                    side: BorderSide(color: AppColors.darkGreen),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.subscriptions, size: 18),
+                  label: const Text(
+                    'Subscribe & Save',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+
+            // Only show Add to Cart and Buy Now buttons if product is not Milk, Curd, or Butter
+            if (!widget.product.category.isMilk &&
+                !widget.product.category.isCurd &&
+                !widget.product.category.isButter &&
+                !widget.product.category.isdryFruits &&
+                !widget.product.category.issprouts &&
+                !widget.product.category.isfruit)
+              Row(
+                children: [
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                            return ScaleTransition(
+                              scale: animation,
+                              child: child,
+                            );
+                          },
+                      child: _showGoToCart
+                          ? ElevatedButton(
+                              key: const ValueKey("goToCart"),
+                              onPressed: _goToCart,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                backgroundColor: AppColors.darkGreen,
+                                minimumSize: const Size(
+                                  double.infinity,
+                                  54,
+                                ), // Added height
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                "Go to Cart",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                          : ElevatedButton.icon(
+                              key: const ValueKey("addToCart"),
+                              onPressed: _handleAddToCart,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                backgroundColor: AppColors.primary,
+                                minimumSize: const Size(
+                                  double.infinity,
+                                  54,
+                                ), // Added same height
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              icon: const Icon(Icons.shopping_cart_outlined),
+                              label: const Text('Add to Cart'),
+                            ),
+                    ),
+                  ),
+
+                  // Expanded(
+                  //   child: _showGoToCart
+                  //       ? ElevatedButton(
+                  //           key: const ValueKey("goToCart"),
+                  //           onPressed: _goToCart,
+                  //           style: ElevatedButton.styleFrom(
+                  //             padding: const EdgeInsets.symmetric(vertical: 16),
+                  //             backgroundColor: AppColors.darkGreen,
+                  //             minimumSize: const Size(double.infinity, 42),
+                  //             shape: RoundedRectangleBorder(
+                  //               borderRadius: BorderRadius.circular(10),
+                  //             ),
+                  //           ),
+                  //           child: const Text(
+                  //             "Go to Cart",
+                  //             style: TextStyle(
+                  //               color: Colors.white,
+                  //               fontSize: 14,
+                  //               fontWeight: FontWeight.bold,
+                  //             ),
+                  //           ),
+                  //         )
+                  //       : ElevatedButton.icon(
+                  //           onPressed: _handleAddToCart,
+                  //           style: ElevatedButton.styleFrom(
+                  //             padding: const EdgeInsets.symmetric(vertical: 16),
+                  //             backgroundColor: AppColors.primary,
+                  //             shape: RoundedRectangleBorder(
+                  //               borderRadius: BorderRadius.circular(12),
+                  //             ),
+                  //           ),
+                  //           icon: const Icon(Icons.shopping_cart_outlined),
+                  //           label: const Text('Add to Cart'),
+                  //         ),
+                  // ),
+                  const SizedBox(width: 16),
+
+                  // Buy Now Button - Always visible
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isBuyingNow ? null : _handleBuyNow,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: AppColors.darkGreen,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isBuyingNow
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text(
+                              'Buy Now',
+                              style: TextStyle(color: AppColors.white),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _handleAddToCart() {
     final selectedUnit = widget.product.units[selectedUnitIndex];

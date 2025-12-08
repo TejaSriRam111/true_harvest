@@ -17,10 +17,12 @@ class SubscriptionPlanScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<SubscriptionPlanScreen> createState() => _SubscriptionPlanScreenState();
+  ConsumerState<SubscriptionPlanScreen> createState() =>
+      _SubscriptionPlanScreenState();
 }
 
-class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen> {
+class _SubscriptionPlanScreenState
+    extends ConsumerState<SubscriptionPlanScreen> {
   SubscriptionPlanTemplate? selectedPlan;
 
   @override
@@ -66,10 +68,7 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
                       ),
                       Text(
                         widget.selectedUnit,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       Text(
                         '₹${_getUnitPrice().toStringAsFixed(2)} per unit',
@@ -99,15 +98,17 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? AppColors.darkGreen : Colors.grey[300]!,
+                      color: isSelected
+                          ? AppColors.darkGreen
+                          : Colors.grey[300]!,
                       width: isSelected ? 2 : 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: AppColors.black.withOpacity(0.05),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -137,7 +138,8 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        if (plan.planType == PlanType.quarterly) ...[
+                                        if (plan.planType ==
+                                            PlanType.quarterly) ...[
                                           const SizedBox(width: 8),
                                           Container(
                                             padding: const EdgeInsets.symmetric(
@@ -146,7 +148,8 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
                                             ),
                                             decoration: BoxDecoration(
                                               color: Colors.orange[100],
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: Text(
                                               'POPULAR',
@@ -173,7 +176,8 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
                               Radio<SubscriptionPlanTemplate>(
                                 value: plan,
                                 groupValue: selectedPlan,
-                                onChanged: (value) => setState(() => selectedPlan = value),
+                                onChanged: (value) =>
+                                    setState(() => selectedPlan = value),
                                 activeColor: AppColors.darkGreen,
                               ),
                             ],
@@ -238,25 +242,29 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
                           const SizedBox(height: 12),
 
                           // Features
-                          ...plan.features.take(3).map((feature) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  size: 16,
-                                  color: AppColors.darkGreen,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    feature,
-                                    style: const TextStyle(fontSize: 14),
+                          ...plan.features
+                              .take(3)
+                              .map(
+                                (feature) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle,
+                                        size: 16,
+                                        color: AppColors.darkGreen,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          feature,
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          )),
+                              ),
 
                           if (plan.features.length > 3) ...[
                             const SizedBox(height: 4),
@@ -295,7 +303,7 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
                   ),
                 ),
                 child: Text(
-                  selectedPlan != null 
+                  selectedPlan != null
                       ? 'Continue with ${selectedPlan!.name}'
                       : 'Select a Plan',
                   style: const TextStyle(
@@ -324,7 +332,7 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
   double _calculateEstimatedPrice(SubscriptionPlanTemplate plan) {
     final unitPrice = _getUnitPrice();
     final daysInPlan = plan.durationInDays;
-    
+
     // Estimate deliveries based on plan type
     int estimatedDeliveries;
     switch (plan.planType) {
@@ -335,7 +343,8 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
         estimatedDeliveries = (daysInPlan / 2).ceil();
         break;
       case PlanType.weekly:
-        estimatedDeliveries = (daysInPlan / 7).ceil() * 3; // Assume 3 days per week
+        estimatedDeliveries =
+            (daysInPlan / 7).ceil() * 3; // Assume 3 days per week
         break;
       case PlanType.monthly:
       case PlanType.quarterly:
@@ -349,7 +358,7 @@ class _SubscriptionPlanScreenState extends ConsumerState<SubscriptionPlanScreen>
 
     final originalPrice = estimatedDeliveries * unitPrice;
     final discountAmount = originalPrice * (plan.discountPercentage / 100);
-    
+
     return originalPrice - discountAmount;
   }
 

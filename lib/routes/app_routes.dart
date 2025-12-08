@@ -8,10 +8,6 @@ import 'package:task_new/screens/main_screen.dart';
 import 'package:task_new/screens/onboarding/splash_screen.dart';
 import 'package:task_new/screens/product_details_view.dart';
 import 'package:task_new/screens/profile_screen.dart';
-import 'package:task_new/screens/subscription/subscription_screen.dart';
-import 'package:task_new/screens/subscription/subscription_plans_screen.dart';
-import 'package:task_new/screens/subscription/custom_subscription_screen.dart';
-import 'package:task_new/screens/subscription/subscription_details_screen.dart';
 import 'package:task_new/screens/delivery_schedule_screen.dart';
 import 'package:task_new/screens/checkout_screen.dart';
 import 'package:task_new/screens/payment_success_screen.dart';
@@ -114,40 +110,9 @@ class AppRoutes {
           settings: settings,
         );
 
-      case subscription:
-        return MaterialPageRoute(
-          builder: (_) => const SubscriptionScreen(),
-          settings: settings,
-        );
-
-      case subscriptionPlans:
-        return MaterialPageRoute(
-          builder: (_) => const SubscriptionPlansScreen(),
-          settings: settings,
-        );
-
-      case customSubscription:
-        return MaterialPageRoute(
-          builder: (_) => const CustomSubscriptionScreen(),
-          settings: settings,
-        );
-
-      case subscriptionDetails:
-        final subscription = settings.arguments as UserSubscription;
-        return MaterialPageRoute(
-          builder: (_) => SubscriptionDetailsScreen(subscription: subscription),
-          settings: settings,
-        );
-
       case deliverySchedule:
         return MaterialPageRoute(
           builder: (_) => const DeliveryScheduleScreen(),
-          settings: settings,
-        );
-
-      case subscriptionManagement:
-        return MaterialPageRoute(
-          builder: (_) => const SubscriptionScreen(),
           settings: settings,
         );
 

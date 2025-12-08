@@ -105,7 +105,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         : 0.0;
 
     // Calculate final total with all discounts applied
-    final total = totalBeforeDiscount - verificationDiscount - coupon.discountAmount;
+    final total =
+        totalBeforeDiscount - verificationDiscount - coupon.discountAmount;
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
@@ -205,31 +206,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   const SizedBox(height: 20),
 
                   // Delivery Time Section
-                  _buildSectionCard(
-                    title: 'Delivery Time',
-                    child: Column(
-                      children: [
-                        _buildDeliveryOption(
-                          'standard',
-                          'Standard Delivery',
-                          '2-3 days',
-                          2.99,
-                          Icons.schedule,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildDeliveryOption(
-                          'express',
-                          'Express Delivery',
-                          'Tomorrow',
-                          5.99,
-                          Icons.flash_on,
-                          isSelected: true,
-                        ),
-                      ],
-                    ),
-                  ),
+                  // _buildSectionCard(
+                  //   title: 'Delivery Time',
+                  //   child: Column(
+                  //     children: [
+                  //       _buildDeliveryOption(
+                  //         'standard',
+                  //         'Standard Delivery',
+                  //         '2-3 days',
+                  //         2.99,
+                  //         Icons.schedule,
+                  //       ),
+                  //       const SizedBox(height: 12),
+                  //       _buildDeliveryOption(
+                  //         'express',
+                  //         'Express Delivery',
+                  //         'Tomorrow',
+                  //         5.99,
+                  //         Icons.flash_on,
+                  //         isSelected: true,
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
 
-                  const SizedBox(height: 20),
+                  // const SizedBox(height: 20),
 
                   // Payment Method Section
                   _buildSectionCard(
@@ -242,13 +243,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           'Pay with Razorpay (Cards, UPI, Wallets)',
                           Icons.payment,
                         ),
-                        const SizedBox(height: 12),
-                        _buildPaymentOption(
-                          'cash_on_delivery',
-                          'Cash on Delivery',
-                          'Pay when you receive',
-                          Icons.money,
-                        ),
+                        // const SizedBox(height: 12),
+                        // _buildPaymentOption(
+                        //   'cash_on_delivery',
+                        //   'Cash on Delivery',
+                        //   'Pay when you receive',
+                        //   Icons.money,
+                        // ),
                       ],
                     ),
                   ),
@@ -272,10 +273,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: AppColors.grey.withOpacity(0.2),
                   spreadRadius: 1,
                   blurRadius: 5,
                   offset: const Offset(0, -2),
@@ -321,7 +322,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                              color: Colors.white,
+                              color: AppColors.white,
                               strokeWidth: 2,
                             ),
                           )
@@ -329,10 +330,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             selectedPaymentMethod == 'razorpay'
                                 ? 'Pay ₹${total.toStringAsFixed(2)}'
                                 : 'Place Order',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           ),
                   ),
@@ -382,7 +383,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isCurrentSelected ? AppColors.darkGreen : Colors.grey[200]!,
@@ -419,7 +420,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       fontWeight: FontWeight.w600,
                       color: isCurrentSelected
                           ? AppColors.darkGreen
-                          : Colors.black87,
+                          : AppColors.black87,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -435,7 +436,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: isCurrentSelected ? AppColors.darkGreen : Colors.black87,
+                color: isCurrentSelected
+                    ? AppColors.darkGreen
+                    : AppColors.black87,
               ),
             ),
           ],
@@ -448,7 +451,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     String value,
     String title,
     String subtitle,
-    IconData icon) {
+    IconData icon,
+  ) {
     final isCurrentSelected = selectedPaymentMethod == value;
 
     return GestureDetector(
@@ -461,7 +465,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isCurrentSelected ? AppColors.darkGreen : Colors.grey[200]!,
@@ -687,8 +691,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         : 0.0;
 
     // Calculate final total with all discounts applied
-    final double finalTotal = totalBeforeDiscount - verificationDiscount - coupon.discountAmount;
-    
+    final double finalTotal =
+        totalBeforeDiscount - verificationDiscount - coupon.discountAmount;
+
     return finalTotal > 0 ? finalTotal : 0.0; // Ensure total is never negative
   }
 
@@ -786,7 +791,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               onPressed: () => _showVerificationDialog(),
               style: TextButton.styleFrom(
                 backgroundColor: AppColors.darkGreen,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,

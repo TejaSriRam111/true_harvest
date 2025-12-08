@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:task_new/models/subscription_model.dart';
 import 'package:task_new/models/advanced_subscription_model.dart'
     hide SubscriptionStatus;
-import 'package:task_new/models/product_model.dart';
+import 'package:task_new/models/subscription_model.dart';
 import 'package:task_new/services/subscription_service.dart';
 
 final subscriptionProvider = ChangeNotifierProvider<SubscriptionController>((

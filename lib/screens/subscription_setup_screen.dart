@@ -19,16 +19,18 @@ class SubscriptionSetupScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<SubscriptionSetupScreen> createState() => _SubscriptionSetupScreenState();
+  ConsumerState<SubscriptionSetupScreen> createState() =>
+      _SubscriptionSetupScreenState();
 }
 
-class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScreen> {
+class _SubscriptionSetupScreenState
+    extends ConsumerState<SubscriptionSetupScreen> {
   DeliveryPattern selectedPattern = DeliveryPattern.daily;
   DateTime startDate = DateTime.now().add(const Duration(days: 1));
   int defaultQuantity = 1;
   List<String> selectedWeeklyDays = [];
   List<CustomDeliveryDate> customDates = [];
-  
+
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _instructionsController = TextEditingController();
 
@@ -75,8 +77,8 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
                   const SizedBox(height: 20),
 
                   // Delivery Pattern Selection
-                  _buildDeliveryPatternSection(),
-                  const SizedBox(height: 20),
+                  // _buildDeliveryPatternSection(),
+                  // const SizedBox(height: 20),
 
                   // Start Date Selection
                   _buildStartDateSection(),
@@ -125,10 +127,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
                 ),
                 child: const Text(
                   'Continue to Payment',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -180,10 +179,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
                     ),
                     Text(
                       '${widget.selectedUnit} • ${widget.selectedPlan.name}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   ],
                 ),
@@ -199,11 +195,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.local_offer,
-                  color: AppColors.darkGreen,
-                  size: 20,
-                ),
+                Icon(Icons.local_offer, color: AppColors.darkGreen, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   '${widget.selectedPlan.discountPercentage.toStringAsFixed(0)}% discount on ${widget.selectedPlan.durationInDays} days plan',
@@ -221,87 +213,87 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
     );
   }
 
-  Widget _buildDeliveryPatternSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Delivery Pattern',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...DeliveryPattern.values.map((pattern) {
-            final isSelected = selectedPattern == pattern;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: InkWell(
-                onTap: () => setState(() => selectedPattern = pattern),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: isSelected ? AppColors.darkGreen : Colors.grey[300]!,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    color: isSelected ? AppColors.darkGreen.withOpacity(0.1) : null,
-                  ),
-                  child: Row(
-                    children: [
-                      Radio<DeliveryPattern>(
-                        value: pattern,
-                        groupValue: selectedPattern,
-                        onChanged: (value) => setState(() => selectedPattern = value!),
-                        activeColor: AppColors.darkGreen,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _getPatternTitle(pattern),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              _getPatternDescription(pattern),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
+  // Widget _buildDeliveryPatternSection() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(12),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.05),
+  //           blurRadius: 8,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         const Text(
+  //           'Delivery Pattern',
+  //           style: TextStyle(
+  //             fontSize: 18,
+  //             fontWeight: FontWeight.bold,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 12),
+  //         ...DeliveryPattern.values.map((pattern) {
+  //           final isSelected = selectedPattern == pattern;
+  //           return Container(
+  //             margin: const EdgeInsets.only(bottom: 8),
+  //             child: InkWell(
+  //               onTap: () => setState(() => selectedPattern = pattern),
+  //               borderRadius: BorderRadius.circular(8),
+  //               child: Container(
+  //                 padding: const EdgeInsets.all(12),
+  //                 decoration: BoxDecoration(
+  //                   border: Border.all(
+  //                     color: isSelected ? AppColors.darkGreen : Colors.grey[300]!,
+  //                   ),
+  //                   borderRadius: BorderRadius.circular(8),
+  //                   color: isSelected ? AppColors.darkGreen.withOpacity(0.1) : null,
+  //                 ),
+  //                 child: Row(
+  //                   children: [
+  //                     Radio<DeliveryPattern>(
+  //                       value: pattern,
+  //                       groupValue: selectedPattern,
+  //                       onChanged: (value) => setState(() => selectedPattern = value!),
+  //                       activeColor: AppColors.darkGreen,
+  //                     ),
+  //                     const SizedBox(width: 8),
+  //                     Expanded(
+  //                       child: Column(
+  //                         crossAxisAlignment: CrossAxisAlignment.start,
+  //                         children: [
+  //                           Text(
+  //                             _getPatternTitle(pattern),
+  //                             style: const TextStyle(
+  //                               fontSize: 16,
+  //                               fontWeight: FontWeight.w600,
+  //                             ),
+  //                           ),
+  //                           Text(
+  //                             _getPatternDescription(pattern),
+  //                             style: TextStyle(
+  //                               fontSize: 14,
+  //                               color: Colors.grey[600],
+  //                             ),
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //           );
+  //         }),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildStartDateSection() {
     return Container(
@@ -322,10 +314,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
         children: [
           const Text(
             'Start Date',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           InkWell(
@@ -374,23 +363,23 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
         children: [
           const Text(
             'Quantity per Delivery',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               IconButton(
-                onPressed: defaultQuantity > 1 
+                onPressed: defaultQuantity > 1
                     ? () => setState(() => defaultQuantity--)
                     : null,
                 icon: const Icon(Icons.remove_circle_outline),
                 color: AppColors.darkGreen,
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey[300]!),
                   borderRadius: BorderRadius.circular(8),
@@ -411,10 +400,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
               const SizedBox(width: 12),
               Text(
                 widget.selectedUnit,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -425,7 +411,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
 
   Widget _buildWeeklyDaysSection() {
     final weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -444,10 +430,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
         children: [
           const Text(
             'Select Delivery Days',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -466,7 +449,10 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
                   });
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.darkGreen : Colors.grey[200],
                     borderRadius: BorderRadius.circular(20),
@@ -508,10 +494,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
             children: [
               const Text(
                 'Custom Delivery Dates',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               TextButton.icon(
@@ -534,38 +517,41 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
               ),
             )
           else
-            ...customDates.map((customDate) => Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today, color: AppColors.darkGreen, size: 20),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${customDate.date.day}/${customDate.date.month}/${customDate.date.year}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${customDate.quantity} ${widget.selectedUnit}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
+            ...customDates.map(
+              (customDate) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      color: AppColors.darkGreen,
+                      size: 20,
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => _removeCustomDate(customDate),
-                    icon: const Icon(Icons.delete_outline),
-                    color: Colors.red,
-                    iconSize: 20,
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Text(
+                      '${customDate.date.day}/${customDate.date.month}/${customDate.date.year}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${customDate.quantity} ${widget.selectedUnit}',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                    IconButton(
+                      onPressed: () => _removeCustomDate(customDate),
+                      icon: const Icon(Icons.delete_outline),
+                      color: Colors.red,
+                      iconSize: 20,
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
         ],
       ),
     );
@@ -590,10 +576,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
         children: [
           const Text(
             'Delivery Address',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -652,10 +635,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
         children: [
           const Text(
             'Price Summary',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Row(
@@ -685,10 +665,7 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
             children: [
               const Text(
                 'Total Amount',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Text(
                 '₹${totalPrice.toStringAsFixed(2)}',
@@ -737,8 +714,10 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
 
   double _calculateTotalPrice() {
     final service = ref.read(advancedSubscriptionServiceProvider);
-    final endDate = startDate.add(Duration(days: widget.selectedPlan.durationInDays));
-    
+    final endDate = startDate.add(
+      Duration(days: widget.selectedPlan.durationInDays),
+    );
+
     return service.calculateSubscriptionPrice(
       product: widget.product,
       unit: widget.selectedUnit,
@@ -774,7 +753,9 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
-      lastDate: startDate.add(Duration(days: widget.selectedPlan.durationInDays)),
+      lastDate: startDate.add(
+        Duration(days: widget.selectedPlan.durationInDays),
+      ),
     );
 
     if (pickedDate != null) {
@@ -782,10 +763,9 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
       final int? quantity = await _showQuantityDialog();
       if (quantity != null) {
         setState(() {
-          customDates.add(CustomDeliveryDate(
-            date: pickedDate,
-            quantity: quantity,
-          ));
+          customDates.add(
+            CustomDeliveryDate(date: pickedDate, quantity: quantity),
+          );
           customDates.sort((a, b) => a.date.compareTo(b.date));
         });
       }
@@ -809,12 +789,17 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                onPressed: quantity > 1 ? () => setState(() => quantity--) : null,
+                onPressed: quantity > 1
+                    ? () => setState(() => quantity--)
+                    : null,
                 icon: const Icon(Icons.remove),
               ),
               Text(
                 quantity.toString(),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               IconButton(
                 onPressed: () => setState(() => quantity++),
@@ -848,7 +833,8 @@ class _SubscriptionSetupScreenState extends ConsumerState<SubscriptionSetupScree
       return;
     }
 
-    if (selectedPattern == DeliveryPattern.weekly && selectedWeeklyDays.isEmpty) {
+    if (selectedPattern == DeliveryPattern.weekly &&
+        selectedWeeklyDays.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select at least one delivery day'),

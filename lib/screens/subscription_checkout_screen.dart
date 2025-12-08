@@ -628,8 +628,8 @@ class _SubscriptionCheckoutScreenState
     switch (mode) {
       case PaymentMode.online:
         return Icons.credit_card;
-      case PaymentMode.cod:
-        return Icons.money;
+      // case PaymentMode.cod:
+      //   return Icons.money;
       case PaymentMode.wallet:
         return Icons.account_balance_wallet;
     }
@@ -639,8 +639,8 @@ class _SubscriptionCheckoutScreenState
     switch (mode) {
       case PaymentMode.online:
         return 'Online Payment';
-      case PaymentMode.cod:
-        return 'Cash on Delivery';
+      // case PaymentMode.cod:
+      //   return 'Cash on Delivery';
       case PaymentMode.wallet:
         return 'Wallet Payment';
     }
@@ -650,8 +650,8 @@ class _SubscriptionCheckoutScreenState
     switch (mode) {
       case PaymentMode.online:
         return 'Pay securely with UPI, Card, or Net Banking';
-      case PaymentMode.cod:
-        return 'Pay when you receive your first delivery';
+      // case PaymentMode.cod:
+      //   return 'Pay when you receive your first delivery';
       case PaymentMode.wallet:
         return 'Pay using your wallet balance';
     }

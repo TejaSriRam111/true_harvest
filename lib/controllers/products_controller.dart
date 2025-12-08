@@ -37,11 +37,9 @@ class GroceryHomeController extends ChangeNotifier {
 
     // Apply category filter
     if (_selectedCategory != 'All') {
-      final categoryType = _categoryMap[_selectedCategory];
+      final categoryType = categoryMap[_selectedCategory];
       if (categoryType != null) {
-        filtered = filtered
-            .where((p) => p.category == categoryType)
-            .toList();
+        filtered = filtered.where((p) => p.category == categoryType).toList();
       }
     }
 
@@ -81,7 +79,7 @@ class GroceryHomeController extends ChangeNotifier {
   }
 
   // Map UI category names to CategoryType values
-  static Map<String, CategoryType> _categoryMap = {
+  static Map<String, CategoryType> categoryMap = {
     'Milk': CategoryType.milk,
     'Curd': CategoryType.curd,
     'Honey': CategoryType.honey,
@@ -141,8 +139,8 @@ class GroceryHomeController extends ChangeNotifier {
           "Ideal for kids and adults",
         ],
         units: [
-          ProductUnit(unitName: "500ml", price: 35), // ₹35
-          ProductUnit(unitName: "1L", price: 65), // ₹65
+          ProductUnit(unitName: "500 ml", price: 35), // ₹35
+          ProductUnit(unitName: "1 L", price: 65), // ₹65
         ],
       ),
 
@@ -162,8 +160,8 @@ class GroceryHomeController extends ChangeNotifier {
           "Ideal for daily meals",
         ],
         units: [
-          ProductUnit(unitName: "500ml", price: 70), // ₹15
-          ProductUnit(unitName: "1l", price: 150), // ₹55
+          ProductUnit(unitName: "500 ml", price: 70), // ₹15
+          ProductUnit(unitName: "1 L", price: 150), // ₹55
         ],
       ),
 
@@ -173,8 +171,8 @@ class GroceryHomeController extends ChangeNotifier {
         category: CategoryType.honey,
         name: 'Organic Raw Honey',
         units: [
-          ProductUnit(unitName: "500g", price: 225), // ₹225
-          ProductUnit(unitName: "1kg", price: 420), // ₹420
+          ProductUnit(unitName: "500 ml", price: 225), // ₹225
+          ProductUnit(unitName: "1 L", price: 420), // ₹420
         ],
         description:
             "Pure, unprocessed raw honey collected from natural bee farms. Rich in antioxidants and natural sweetness.",
@@ -194,8 +192,8 @@ class GroceryHomeController extends ChangeNotifier {
         category: CategoryType.paneer,
         name: 'Fresh Malai Paneer',
         units: [
-          ProductUnit(unitName: "200g", price: 85), // ₹85
-          ProductUnit(unitName: "500g", price: 210), // ₹210
+          ProductUnit(unitName: "200 g", price: 85), // ₹85
+          ProductUnit(unitName: "500 g", price: 210), // ₹210
         ],
         description:
             "Soft and creamy malai paneer made from fresh farm milk. Perfect for curries, snacks, and grilling.",
@@ -215,7 +213,7 @@ class GroceryHomeController extends ChangeNotifier {
         category: CategoryType.sprouts,
         name: 'Fresh Mixed Sprouts',
         units: [
-          ProductUnit(unitName: "1 box (250g)", price: 45), // ₹45
+          ProductUnit(unitName: "1 box (250 g)", price: 45), // ₹45
         ],
         description:
             "A healthy mix of green gram, chickpea, and lentil sprouts. Ready-to-eat, high in protein and fiber.",
@@ -235,7 +233,7 @@ class GroceryHomeController extends ChangeNotifier {
         category: CategoryType.fruit,
         name: 'Fresh Fruit Bowl',
         units: [
-          ProductUnit(unitName: "1 Box (300g)", price: 80), // ₹80
+          ProductUnit(unitName: "1 Box (300 g)", price: 80), // ₹80
         ],
         description:
             "A refreshing bowl of seasonal fresh fruits, cut and packed hygienically. Great for a light and healthy snack.",
@@ -255,7 +253,7 @@ class GroceryHomeController extends ChangeNotifier {
         category: CategoryType.dryFruits,
         name: 'Premium Dry Fruits Mix',
         units: [
-          ProductUnit(unitName: "250g", price: 299), // ₹299
+          ProductUnit(unitName: "250 g", price: 299), // ₹299
         ],
         description:
             "A premium mix of almonds, cashews, raisins, pistachios, and walnuts. Perfect for daily nutrition.",

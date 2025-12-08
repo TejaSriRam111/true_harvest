@@ -1,4 +1,3 @@
-
 // Enhanced subscription models based on the documentation
 
 enum PlanType {
@@ -9,45 +8,23 @@ enum PlanType {
   quarterly,
   halfYearly,
   annual,
-  custom
+  custom,
 }
 
+enum DeliveryPattern { daily, alternate, weekly, monthly, custom }
 
-enum DeliveryPattern {
-  daily,
-  alternate,
-  weekly,
-  monthly,
-  custom
-}
+enum SubscriptionStatus { active, paused, completed, cancelled }
 
-enum SubscriptionStatus {
-  active,
-  paused,
-  completed,
-  cancelled
-}
-
-enum PaymentMode {
-  online,
-  cod,
-  wallet
-}
+enum PaymentMode { online, /* cod, */ wallet }
 
 class CustomDeliveryDate {
   final DateTime date;
   final int quantity;
 
-  CustomDeliveryDate({
-    required this.date,
-    required this.quantity,
-  });
+  CustomDeliveryDate({required this.date, required this.quantity});
 
   Map<String, dynamic> toJson() {
-    return {
-      'date': date.toIso8601String(),
-      'qty': quantity,
-    };
+    return {'date': date.toIso8601String(), 'qty': quantity};
   }
 
   factory CustomDeliveryDate.fromJson(Map<String, dynamic> json) {
@@ -114,7 +91,7 @@ class AdvancedSubscription {
   bool get isPaused => status == SubscriptionStatus.paused;
   bool get isCompleted => status == SubscriptionStatus.completed;
   bool get isCancelled => status == SubscriptionStatus.cancelled;
-  
+
   int get daysRemaining => endDate.difference(DateTime.now()).inDays;
   double get completionPercentage {
     final totalDays = endDate.difference(startDate).inDays;
@@ -125,7 +102,7 @@ class AdvancedSubscription {
   // Calculate next delivery date
   DateTime? get nextDeliveryDate {
     if (!isActive) return null;
-    
+
     final today = DateTime.now();
     switch (deliveryPattern) {
       case DeliveryPattern.daily:
@@ -161,18 +138,24 @@ class AdvancedSubscription {
 
   DateTime? _getNextWeeklyDelivery(DateTime from) {
     if (weeklyDays.isEmpty) return null;
-    
+
     final weekdayMap = {
-      'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 
-      'Fri': 5, 'Sat': 6, 'Sun': 7
+      'Mon': 1,
+      'Tue': 2,
+      'Wed': 3,
+      'Thu': 4,
+      'Fri': 5,
+      'Sat': 6,
+      'Sun': 7,
     };
-    
-    final targetWeekdays = weeklyDays
-        .map((day) => weekdayMap[day])
-        .where((day) => day != null)
-        .cast<int>()
-        .toList()
-      ..sort();
+
+    final targetWeekdays =
+        weeklyDays
+            .map((day) => weekdayMap[day])
+            .where((day) => day != null)
+            .cast<int>()
+            .toList()
+          ..sort();
 
     DateTime next = from.add(const Duration(days: 1));
     while (next.isBefore(endDate)) {
@@ -186,24 +169,31 @@ class AdvancedSubscription {
 
   DateTime? _getNextMonthlyDelivery(DateTime from) {
     final nextMonth = DateTime(from.year, from.month + 1, startDate.day);
-    return nextMonth.isBefore(endDate) && !pauseDates.contains(nextMonth) 
-        ? nextMonth : null;
+    return nextMonth.isBefore(endDate) && !pauseDates.contains(nextMonth)
+        ? nextMonth
+        : null;
   }
 
   DateTime? _getNextCustomDelivery(DateTime from) {
-    final upcomingDates = customDates
-        .where((cd) => cd.date.isAfter(from) && !pauseDates.contains(cd.date))
-        .map((cd) => cd.date)
-        .toList()
-      ..sort();
-    
+    final upcomingDates =
+        customDates
+            .where(
+              (cd) => cd.date.isAfter(from) && !pauseDates.contains(cd.date),
+            )
+            .map((cd) => cd.date)
+            .toList()
+          ..sort();
+
     return upcomingDates.isNotEmpty ? upcomingDates.first : null;
   }
 
   // Generate delivery schedule for a date range
-  List<DeliveryScheduleItem> generateDeliverySchedule(DateTime from, DateTime to) {
+  List<DeliveryScheduleItem> generateDeliverySchedule(
+    DateTime from,
+    DateTime to,
+  ) {
     final schedule = <DeliveryScheduleItem>[];
-    
+
     switch (deliveryPattern) {
       case DeliveryPattern.daily:
         schedule.addAll(_generateDailySchedule(from, to));
@@ -221,62 +211,80 @@ class AdvancedSubscription {
         schedule.addAll(_generateCustomSchedule(from, to));
         break;
     }
-    
+
     return schedule;
   }
 
-  List<DeliveryScheduleItem> _generateDailySchedule(DateTime from, DateTime to) {
+  List<DeliveryScheduleItem> _generateDailySchedule(
+    DateTime from,
+    DateTime to,
+  ) {
     final schedule = <DeliveryScheduleItem>[];
     DateTime current = from;
-    
+
     while (current.isBefore(to) && current.isBefore(endDate)) {
       if (!pauseDates.contains(current)) {
-        schedule.add(DeliveryScheduleItem(
-          date: current,
-          productName: productName,
-          unit: unit,
-          quantity: defaultQty,
-          subscriptionId: subscriptionId,
-        ));
+        schedule.add(
+          DeliveryScheduleItem(
+            date: current,
+            productName: productName,
+            unit: unit,
+            quantity: defaultQty,
+            subscriptionId: subscriptionId,
+          ),
+        );
       }
       current = current.add(const Duration(days: 1));
     }
-    
+
     return schedule;
   }
 
-  List<DeliveryScheduleItem> _generateAlternateSchedule(DateTime from, DateTime to) {
+  List<DeliveryScheduleItem> _generateAlternateSchedule(
+    DateTime from,
+    DateTime to,
+  ) {
     final schedule = <DeliveryScheduleItem>[];
     DateTime current = startDate;
-    
+
     // Find the first delivery date from the start
     while (current.isBefore(from)) {
       current = current.add(const Duration(days: 2));
     }
-    
+
     while (current.isBefore(to) && current.isBefore(endDate)) {
       if (!pauseDates.contains(current)) {
-        schedule.add(DeliveryScheduleItem(
-          date: current,
-          productName: productName,
-          unit: unit,
-          quantity: defaultQty,
-          subscriptionId: subscriptionId,
-        ));
+        schedule.add(
+          DeliveryScheduleItem(
+            date: current,
+            productName: productName,
+            unit: unit,
+            quantity: defaultQty,
+            subscriptionId: subscriptionId,
+          ),
+        );
       }
       current = current.add(const Duration(days: 2));
     }
-    
+
     return schedule;
   }
 
-  List<DeliveryScheduleItem> _generateWeeklySchedule(DateTime from, DateTime to) {
+  List<DeliveryScheduleItem> _generateWeeklySchedule(
+    DateTime from,
+    DateTime to,
+  ) {
     final schedule = <DeliveryScheduleItem>[];
     final weekdayMap = {
-      'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 
-      'Fri': 5, 'Sat': 6, 'Sun': 7
+      'Mon': 1,
+      'Tue': 2,
+      'Wed': 3,
+      'Thu': 4,
+      'Fri': 5,
+      'Sat': 6,
+      'Sun': 7,
     };
-    
+
     final targetWeekdays = weeklyDays
         .map((day) => weekdayMap[day])
         .where((day) => day != null)
@@ -285,55 +293,70 @@ class AdvancedSubscription {
 
     DateTime current = from;
     while (current.isBefore(to) && current.isBefore(endDate)) {
-      if (targetWeekdays.contains(current.weekday) && !pauseDates.contains(current)) {
-        schedule.add(DeliveryScheduleItem(
-          date: current,
-          productName: productName,
-          unit: unit,
-          quantity: defaultQty,
-          subscriptionId: subscriptionId,
-        ));
+      if (targetWeekdays.contains(current.weekday) &&
+          !pauseDates.contains(current)) {
+        schedule.add(
+          DeliveryScheduleItem(
+            date: current,
+            productName: productName,
+            unit: unit,
+            quantity: defaultQty,
+            subscriptionId: subscriptionId,
+          ),
+        );
       }
       current = current.add(const Duration(days: 1));
     }
-    
+
     return schedule;
   }
 
-  List<DeliveryScheduleItem> _generateMonthlySchedule(DateTime from, DateTime to) {
+  List<DeliveryScheduleItem> _generateMonthlySchedule(
+    DateTime from,
+    DateTime to,
+  ) {
     final schedule = <DeliveryScheduleItem>[];
     DateTime current = DateTime(from.year, from.month, startDate.day);
-    
+
     while (current.isBefore(to) && current.isBefore(endDate)) {
       if (current.isAfter(from) && !pauseDates.contains(current)) {
-        schedule.add(DeliveryScheduleItem(
-          date: current,
-          productName: productName,
-          unit: unit,
-          quantity: defaultQty,
-          subscriptionId: subscriptionId,
-        ));
+        schedule.add(
+          DeliveryScheduleItem(
+            date: current,
+            productName: productName,
+            unit: unit,
+            quantity: defaultQty,
+            subscriptionId: subscriptionId,
+          ),
+        );
       }
       current = DateTime(current.year, current.month + 1, startDate.day);
     }
-    
+
     return schedule;
   }
 
-  List<DeliveryScheduleItem> _generateCustomSchedule(DateTime from, DateTime to) {
+  List<DeliveryScheduleItem> _generateCustomSchedule(
+    DateTime from,
+    DateTime to,
+  ) {
     return customDates
-        .where((cd) => 
-            cd.date.isAfter(from) && 
-            cd.date.isBefore(to) && 
-            cd.date.isBefore(endDate) &&
-            !pauseDates.contains(cd.date))
-        .map((cd) => DeliveryScheduleItem(
+        .where(
+          (cd) =>
+              cd.date.isAfter(from) &&
+              cd.date.isBefore(to) &&
+              cd.date.isBefore(endDate) &&
+              !pauseDates.contains(cd.date),
+        )
+        .map(
+          (cd) => DeliveryScheduleItem(
             date: cd.date,
             productName: productName,
             unit: unit,
             quantity: cd.quantity,
             subscriptionId: subscriptionId,
-          ))
+          ),
+        )
         .toList();
   }
 
@@ -489,22 +512,22 @@ class SubscriptionPlanTemplate {
 
   static List<SubscriptionPlanTemplate> getDefaultPlans() {
     return [
-      SubscriptionPlanTemplate(
-        planType: PlanType.daily,
-        name: 'Daily Delivery',
-        description: 'Fresh delivery every day',
-        durationInDays: 30,
-        discountPercentage: 0,
-        features: ['Daily fresh delivery', 'Flexible pause/resume', 'No commitment'],
-      ),
-      SubscriptionPlanTemplate(
-        planType: PlanType.weekly,
-        name: 'Weekly Plan',
-        description: 'Choose your delivery days',
-        durationInDays: 30,
-        discountPercentage: 5,
-        features: ['Choose delivery days', '5% discount', 'Flexible scheduling'],
-      ),
+      // SubscriptionPlanTemplate(
+      //   planType: PlanType.daily,
+      //   name: 'Daily Delivery',
+      //   description: 'Fresh delivery every day',
+      //   durationInDays: 30,
+      //   discountPercentage: 0,
+      //   features: ['Daily fresh delivery', 'Flexible pause/resume', 'No commitment'],
+      // ),
+      // SubscriptionPlanTemplate(
+      //   planType: PlanType.weekly,
+      //   name: 'Weekly Plan',
+      //   description: 'Choose your delivery days',
+      //   durationInDays: 30,
+      //   discountPercentage: 5,
+      //   features: ['Choose delivery days', '5% discount', 'Flexible scheduling'],
+      // ),
       SubscriptionPlanTemplate(
         planType: PlanType.monthly,
         name: 'Monthly Plan',
@@ -527,7 +550,12 @@ class SubscriptionPlanTemplate {
         description: '6 months of maximum savings',
         durationInDays: 180,
         discountPercentage: 20,
-        features: ['20% discount', 'VIP support', 'Free delivery', 'Bonus gifts'],
+        features: [
+          '20% discount',
+          'VIP support',
+          'Free delivery',
+          'Bonus gifts',
+        ],
       ),
       SubscriptionPlanTemplate(
         planType: PlanType.annual,
@@ -535,7 +563,12 @@ class SubscriptionPlanTemplate {
         description: 'Best value for a full year',
         durationInDays: 365,
         discountPercentage: 25,
-        features: ['25% discount', 'VIP support', 'Free delivery', 'Monthly bonus'],
+        features: [
+          '25% discount',
+          'VIP support',
+          'Free delivery',
+          'Monthly bonus',
+        ],
       ),
     ];
   }

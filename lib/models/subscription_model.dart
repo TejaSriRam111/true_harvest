@@ -1,27 +1,10 @@
 import 'package:task_new/models/product_model.dart';
 
-enum SubscriptionType {
-  daily,
-  weekly,
-  monthly,
-  quarterly,
-  yearly,
-}
+enum SubscriptionType { daily, weekly, monthly, quarterly, yearly }
 
-enum SubscriptionStatus {
-  active,
-  paused,
-  cancelled,
-  expired,
-}
+enum SubscriptionStatus { active, paused, cancelled, expired }
 
-enum DeliveryFrequency {
-  daily,
-  everyOtherDay,
-  weekly,
-  biWeekly,
-  monthly,
-}
+enum DeliveryFrequency { daily, everyOtherDay, weekly, biWeekly, monthly }
 
 class SubscriptionPlan {
   final String id;
@@ -50,7 +33,8 @@ class SubscriptionPlan {
     required this.discount,
   });
 
-  double get discountPercentage => ((originalPrice - price) / originalPrice) * 100;
+  double get discountPercentage =>
+      ((originalPrice - price) / originalPrice) * 100;
 
   SubscriptionPlan copyWith({
     String? id,
@@ -153,7 +137,8 @@ class UserSubscription {
   bool get isActive => status == SubscriptionStatus.active;
   bool get isPaused => status == SubscriptionStatus.paused;
   bool get isCancelled => status == SubscriptionStatus.cancelled;
-  bool get isExpired => status == SubscriptionStatus.expired || DateTime.now().isAfter(endDate);
+  bool get isExpired =>
+      status == SubscriptionStatus.expired || DateTime.now().isAfter(endDate);
 
   int get daysRemaining {
     if (isExpired || isCancelled) return 0;

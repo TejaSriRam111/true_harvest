@@ -19,10 +19,7 @@ class DeliveryScheduleScreen extends ConsumerWidget {
         backgroundColor: AppColors.darkGreen,
         title: const Text(
           'Delivery Schedule',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -58,28 +55,26 @@ class DeliveryScheduleScreen extends ConsumerWidget {
                     AppColors.darkGreen,
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 40,
-                  color: Colors.grey[300],
-                ),
+                Container(width: 1, height: 40, color: Colors.grey[300]),
                 Expanded(
                   child: _buildSummaryItem(
                     'Delivered',
-                    deliverySchedules.where((d) => d.isDelivered).length.toString(),
+                    deliverySchedules
+                        .where((d) => d.isDelivered)
+                        .length
+                        .toString(),
                     Icons.check_circle,
                     Colors.green,
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 40,
-                  color: Colors.grey[300],
-                ),
+                Container(width: 1, height: 40, color: Colors.grey[300]),
                 Expanded(
                   child: _buildSummaryItem(
                     'Missed',
-                    deliverySchedules.where((d) => d.isMissed).length.toString(),
+                    deliverySchedules
+                        .where((d) => d.isMissed)
+                        .length
+                        .toString(),
                     Icons.cancel,
                     Colors.red,
                   ),
@@ -111,7 +106,9 @@ class DeliveryScheduleScreen extends ConsumerWidget {
                       children: [
                         _buildDeliveryList(upcomingDeliveries, ref),
                         _buildDeliveryList(
-                          deliverySchedules.where((d) => d.isDelivered).toList(),
+                          deliverySchedules
+                              .where((d) => d.isDelivered)
+                              .toList(),
                           ref,
                         ),
                         _buildDeliveryList(deliverySchedules, ref),
@@ -127,7 +124,12 @@ class DeliveryScheduleScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryItem(String label, String value, IconData icon, Color color) {
+  Widget _buildSummaryItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -140,13 +142,7 @@ class DeliveryScheduleScreen extends ConsumerWidget {
             color: color,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ],
     );
   }
@@ -157,18 +153,11 @@ class DeliveryScheduleScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.schedule,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.schedule, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'No deliveries found',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -221,10 +210,7 @@ class DeliveryScheduleScreen extends ConsumerWidget {
                       ),
                       Text(
                         _formatTime(delivery.deliveryDate),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -238,29 +224,28 @@ class DeliveryScheduleScreen extends ConsumerWidget {
             // Items
             const Text(
               'Items:',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 4),
-            ...delivery.items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.circle,
-                    size: 6,
-                    color: AppColors.darkGreen,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${item.product.name} (${item.quantity}x ${item.unit})',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ],
+            ...delivery.items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.circle,
+                      size: 6,
+                      color: AppColors.darkGreen,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${item.product.name} (${item.quantity}x ${item.unit})',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
 
             if (delivery.deliveryNotes != null) ...[
               const SizedBox(height: 8),
@@ -272,19 +257,12 @@ class DeliveryScheduleScreen extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.note,
-                      size: 16,
-                      color: Colors.grey,
-                    ),
+                    const Icon(Icons.note, size: 16, color: Colors.grey),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         delivery.deliveryNotes!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ),
                   ],
@@ -293,7 +271,8 @@ class DeliveryScheduleScreen extends ConsumerWidget {
             ],
 
             // Actions for upcoming deliveries
-            if (delivery.isScheduled && delivery.deliveryDate.isAfter(DateTime.now())) ...[
+            if (delivery.isScheduled &&
+                delivery.deliveryDate.isAfter(DateTime.now())) ...[
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -304,7 +283,10 @@ class DeliveryScheduleScreen extends ConsumerWidget {
                         side: const BorderSide(color: AppColors.darkGreen),
                       ),
                       icon: const Icon(Icons.schedule, size: 16),
-                      label: const Text('Reschedule', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'Reschedule',
+                        style: TextStyle(fontSize: 12),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),

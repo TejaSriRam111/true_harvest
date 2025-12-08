@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:task_new/screens/home_screen.dart';
 import 'package:task_new/screens/profile_screen.dart';
-import 'package:task_new/screens/subscription/subscription_screen.dart';
 import 'package:task_new/screens/wishlist_screen.dart';
 import 'package:task_new/utils/app_colors.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  const MainScreen({super.key});
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -18,7 +17,6 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = const [
     HomeScreen(),
     WishlistScreen(),
-    SubscriptionScreen(),
     ProfileScreen(),
   ];
 
