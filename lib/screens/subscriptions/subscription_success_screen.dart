@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_new/controllers/subscription_controller.dart';
 import 'package:task_new/utils/app_colors.dart';
-import 'package:task_new/screens/subscription_details_screen.dart';
+import 'package:task_new/screens/subscriptions/subscription_details_screen.dart';
 
 class SubscriptionSuccessScreen extends ConsumerWidget {
   final String subscriptionId;
 
-  const SubscriptionSuccessScreen({
-    Key? key,
-    required this.subscriptionId,
-  }) : super(key: key);
+  const SubscriptionSuccessScreen({Key? key, required this.subscriptionId})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final subscriptionService = ref.watch(advancedSubscriptionServiceProvider);
-    final subscription = subscriptionService.getSubscriptionById(subscriptionId);
+    final subscription = subscriptionService.getSubscriptionById(
+      subscriptionId,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
@@ -25,7 +25,7 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
           child: Column(
             children: [
               const Spacer(),
-              
+
               // Success Animation/Icon
               Container(
                 width: 120,
@@ -40,9 +40,9 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
                   color: Colors.green[600],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Success Message
               const Text(
                 'Subscription Created Successfully!',
@@ -53,9 +53,9 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               Text(
                 'Your subscription has been set up and will start delivering fresh products as scheduled.',
                 style: TextStyle(
@@ -65,9 +65,9 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Subscription Details Card
               if (subscription != null) ...[
                 Container(
@@ -123,9 +123,9 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Key Details
                       _buildDetailRow(
                         'Subscription ID',
@@ -149,10 +149,10 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
               ],
-              
+
               // Action Buttons
               Row(
                 children: [
@@ -199,9 +199,9 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              
+
               const Spacer(),
-              
+
               // Additional Info
               Container(
                 padding: const EdgeInsets.all(16),
@@ -212,19 +212,12 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Colors.blue[700],
-                      size: 20,
-                    ),
+                    Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'You can manage, pause, or modify your subscription anytime from your profile.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.blue[700],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.blue[700]),
                       ),
                     ),
                   ],
@@ -243,13 +236,7 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
           Text(
             value,
             style: TextStyle(
@@ -271,9 +258,8 @@ class SubscriptionSuccessScreen extends ConsumerWidget {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => SubscriptionDetailsScreen(
-          subscriptionId: subscriptionId,
-        ),
+        builder: (context) =>
+            SubscriptionDetailsScreen(subscriptionId: subscriptionId),
       ),
     );
   }

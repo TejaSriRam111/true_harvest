@@ -4,7 +4,7 @@ import 'package:task_new/controllers/subscription_controller.dart';
 import 'package:task_new/models/advanced_subscription_model.dart';
 import 'package:task_new/models/product_model.dart';
 import 'package:task_new/utils/app_colors.dart';
-import 'package:task_new/screens/subscription_setup_screen.dart';
+import 'package:task_new/screens/subscriptions/subscription_setup_screen.dart';
 
 class SubscriptionPlanScreen extends ConsumerStatefulWidget {
   final Product product;

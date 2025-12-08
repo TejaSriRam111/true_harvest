@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:task_new/screens/home_screen.dart';
 import 'package:task_new/screens/profile_screen.dart';
+import 'package:task_new/screens/subscriptions/subscription_home_screen.dart';
 import 'package:task_new/screens/wishlist_screen.dart';
 import 'package:task_new/utils/app_colors.dart';
 
@@ -17,6 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = const [
     HomeScreen(),
     WishlistScreen(),
+    SubscriptionScreen(),
     ProfileScreen(),
   ];
 

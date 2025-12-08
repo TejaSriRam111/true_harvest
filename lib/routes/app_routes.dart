@@ -11,6 +11,7 @@ import 'package:task_new/screens/profile_screen.dart';
 import 'package:task_new/screens/delivery_schedule_screen.dart';
 import 'package:task_new/screens/checkout_screen.dart';
 import 'package:task_new/screens/payment_success_screen.dart';
+import 'package:task_new/screens/subscriptions/subscription_home_screen.dart';
 import 'package:task_new/screens/wishlist_screen.dart';
 import 'package:task_new/models/product_model.dart';
 import 'package:task_new/models/subscription_model.dart';
@@ -119,6 +120,12 @@ class AppRoutes {
       case wishlist:
         return MaterialPageRoute(
           builder: (_) => const WishlistScreen(),
+          settings: settings,
+        );
+
+      case subscription:
+        return MaterialPageRoute(
+          builder: (_) => SubscriptionScreen(),
           settings: settings,
         );
 
