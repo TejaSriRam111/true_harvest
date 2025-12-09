@@ -16,17 +16,18 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   Future<void> getCurrentLocation() async {
     try {
-      // enable loading
       state = state.copyWith(isLoading: true, error: null);
-
-      await Future.delayed(Duration(seconds: 1)); // mock delay
-
+      await Future.delayed(Duration(seconds: 1));
       final position = await LocationService.getCurrentLocation();
 
       if (position != null) {
         final address = await LocationService.getAddressFromLatLng(position);
-
-        state = state.copyWith(isLoading: false, location: address);
+        final detailedAddress = await LocationService.getDetailedAddressFromLatLng(position);
+        state = state.copyWith(
+          isLoading: false,
+          location: address,
+          detailedAddress: detailedAddress,
+        );
       } else {
         state = state.copyWith(
           isLoading: false,

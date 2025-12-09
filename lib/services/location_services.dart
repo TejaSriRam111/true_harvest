@@ -11,6 +11,7 @@ class LocationService {
     // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
       return null;
     }
 
@@ -24,6 +25,8 @@ class LocationService {
     }
 
     if (permission == LocationPermission.deniedForever) {
+      
+      await Geolocator.openAppSettings();
       return null;
     }
 
@@ -47,6 +50,48 @@ class LocationService {
       return 'Unknown Location';
     } catch (e) {
       return 'Unknown Location';
+    }
+  }
+
+  // Get detailed address components from coordinates
+  static Future<Map<String, String>> getDetailedAddressFromLatLng(Position position) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        return {
+          'street': place.street ?? '',
+          'city': place.locality ?? '',
+          'state': place.administrativeArea ?? '',
+          'country': place.country ?? 'India',
+          'zip': place.postalCode ?? '',
+          'latitude': position.latitude.toString(),
+          'longitude': position.longitude.toString(),
+        };
+      }
+      return {
+        'street': '',
+        'city': 'Unknown',
+        'state': 'Unknown',
+        'country': 'India',
+        'zip': '',
+        'latitude': position.latitude.toString(),
+        'longitude': position.longitude.toString(),
+      };
+    } catch (e) {
+      return {
+        'street': '',
+        'city': 'Unknown',
+        'state': 'Unknown',
+        'country': 'India',
+        'zip': '',
+        'latitude': position.latitude.toString(),
+        'longitude': position.longitude.toString(),
+      };
     }
   }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:task_new/controllers/location_provider.dart';
 import 'package:task_new/controllers/subscription_controller.dart';
 import 'package:task_new/controllers/address_controller.dart';
 import 'package:task_new/models/advanced_subscription_model.dart';
 import 'package:task_new/models/product_model.dart';
+import 'package:task_new/models/address_model.dart';
 import 'package:task_new/utils/app_colors.dart';
 import 'package:task_new/screens/subscriptions/subscription_checkout_screen.dart';
 
@@ -31,6 +33,7 @@ class _SubscriptionSetupScreenState
   int defaultQuantity = 1;
   List<String> selectedWeeklyDays = [];
   List<CustomDeliveryDate> customDates = [];
+  bool isLocationSelected = false; // Track if current location is selected
 
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _instructionsController = TextEditingController();
@@ -53,6 +56,47 @@ class _SubscriptionSetupScreenState
       default:
         selectedPattern = DeliveryPattern.daily;
     }
+    _checkIfLocationShouldBeSelected();
+  }
+
+  void _checkIfLocationShouldBeSelected() {
+    final addressController = ref.read(addressProvider);
+    final locationState = ref.read(locationProvider);
+    
+    // If no saved address but location data exists, select location by default
+    if (addressController.address == null && 
+        locationState.detailedAddress != null && 
+        locationState.detailedAddress!.isNotEmpty) {
+      setState(() {
+        isLocationSelected = true;
+      });
+    }
+  }
+
+  void _selectCurrentLocation() {
+    final locationState = ref.read(locationProvider);
+    if (locationState.detailedAddress == null) return;
+    
+    final loc = locationState.detailedAddress!;
+    setState(() {
+      isLocationSelected = true;
+      final street = loc['street'] ?? '';
+      final city = loc['city'] ?? '';
+      final state = loc['state'] ?? '';
+      final zip = loc['zip'] ?? '';
+      final country = loc['country'] ?? 'India';
+      _addressController.text = [street, city, state, zip, country].where((s) => s.isNotEmpty).join(', ');
+    });
+  }
+
+  void _selectSavedAddress(int idx, List<AddressModel> savedList) {
+    if (idx < 0 || idx >= savedList.length) return;
+    
+    final address = savedList[idx];
+    setState(() {
+      isLocationSelected = false;
+      _addressController.text = address.fullAddress;
+    });
   }
 
   @override
@@ -563,6 +607,9 @@ class _SubscriptionSetupScreenState
       builder: (context, ref, child) {
         final addressController = ref.watch(addressProvider);
         final savedAddress = addressController.address;
+        final locationaddress=ref.watch(locationProvider);
+        final isUsingLocation=addressController.address==null && locationaddress.detailedAddress!=null;
+        final locationdata=locationaddress.detailedAddress??{};
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -587,13 +634,13 @@ class _SubscriptionSetupScreenState
                     'Delivery Address',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      // Allow user to edit address in _addressController
-                      _showAddressEditDialog();
-                    },
-                    child: const Text('Edit'),
-                  ),
+                  // TextButton(
+                  //   onPressed: () {
+                  //     // Allow user to edit address in _addressController
+                  //     _showAddressEditDialog({});
+                  //   },
+                  //   child: const Text('Edit'),
+                  // ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -610,39 +657,14 @@ class _SubscriptionSetupScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Contact Info
+                      // Complete Address as paragraph
                       Text(
-                        '${savedAddress.name}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Phone: ${savedAddress.phone}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Email: ${savedAddress.email}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      // Address Info as paragraph
-                      Text(
+                        //'${savedAddress.name}, ${savedAddress.phone}, ${savedAddress.email}, 
                         '${savedAddress.street}, ${savedAddress.apartment}, ${savedAddress.city}, ${savedAddress.state} ${savedAddress.zip}, ${savedAddress.country}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[700],
-                          height: 1.5,
+                          height: 1.6,
                         ),
                       ),
                       if (savedAddress.deliveryInstructions != null &&
@@ -693,6 +715,59 @@ class _SubscriptionSetupScreenState
                     ],
                   ),
                 )
+              else if (isUsingLocation && locationdata.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                color: Colors.blue[700],
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Address from current location',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue[800],
+                                ),
+                              ),
+                            ],
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              _showAddressEditDialog(locationdata);
+                            },
+                            child: const Text('Edit'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Address in paragraph format
+                      Text(
+                        '${locationdata['street'] ?? 'N/A'}, ${locationdata['city'] ?? 'N/A'}, ${locationdata['state'] ?? 'N/A'} ${locationdata['zip'] ?? 'N/A'}, ${locationdata['country'] ?? 'India'}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               else
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -719,18 +794,18 @@ class _SubscriptionSetupScreenState
                           color: Colors.grey[500],
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          _showAddressEditDialog();
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add Address'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.darkGreen,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
+                      // const SizedBox(height: 12),
+                      // ElevatedButton.icon(
+                      //   onPressed: () {
+                      //     _showAddressEditDialog();
+                      //   },
+                      //   icon: const Icon(Icons.add),
+                      //   label: const Text('Add Address'),
+                      //   style: ElevatedButton.styleFrom(
+                      //     backgroundColor: AppColors.darkGreen,
+                      //     foregroundColor: Colors.white,
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
@@ -741,34 +816,35 @@ class _SubscriptionSetupScreenState
     );
   }
 
-  void _showAddressEditDialog() {
+  void _showAddressEditDialog(Map<String, dynamic> locationdata) {
+    // Initialize controller with location data
+    if (locationdata.isNotEmpty) {
+      _addressController.text = '${locationdata['street'] ?? ''}, ${locationdata['city'] ?? ''}, ${locationdata['state'] ?? ''} ${locationdata['zip'] ?? ''}, ${locationdata['country'] ?? 'India'}'.replaceAll(RegExp(r',\s*,'), ',').replaceAll(RegExp(r',\s+,'), ',').trim();
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Delivery Address'),
+        title: const Text('Edit Address'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: _addressController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Complete Address',
-                  hintText: 'Enter your complete delivery address',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+              // Address paragraph field
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey[50],
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _instructionsController,
-                decoration: InputDecoration(
-                  labelText: 'Delivery Instructions',
-                  hintText: 'E.g., Ring the bell twice, Call on arrival',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                child: TextField(
+                  controller: _addressController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: 'Complete Address',
+                    hintText: 'Street, Apartment, City, State, ZIP, Country',
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.all(12),
                   ),
                 ),
               ),
@@ -782,8 +858,16 @@ class _SubscriptionSetupScreenState
           ),
           ElevatedButton(
             onPressed: () {
-              // Update the controllers if needed
-              Navigator.pop(ctx);
+              if (_addressController.text.isNotEmpty) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Address updated successfully'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.darkGreen,
@@ -1006,7 +1090,37 @@ class _SubscriptionSetupScreenState
   }
 
   void _continueToCheckout() {
-    if (_addressController.text.trim().isEmpty) {
+    // Check if we have a valid address from either source
+    final addrCtrl = ref.read(addressProvider);
+    final savedAddress = addrCtrl.address;
+    final locationaddress = ref.read(locationProvider);
+    final isUsingLocation =
+        addrCtrl.address == null && locationaddress.detailedAddress != null;
+    final locationdata = locationaddress.detailedAddress ?? {};
+
+    // Build address string - prefer saved address, then location data, then manual entry
+    String deliveryAddress = '';
+    if (savedAddress != null) {
+      deliveryAddress = [
+        savedAddress.street,
+        savedAddress.apartment,
+        savedAddress.city,
+        savedAddress.state,
+        savedAddress.zip,
+        savedAddress.country,
+      ].where((s) => s.isNotEmpty).join(', ');
+    } else if (isUsingLocation && locationdata.isNotEmpty) {
+      deliveryAddress =
+          '${locationdata['street'] ?? ''}, ${locationdata['city'] ?? ''}, ${locationdata['state'] ?? ''} ${locationdata['zip'] ?? ''}, ${locationdata['country'] ?? 'India'}'
+              .replaceAll(RegExp(r',\s*,'), ',')
+              .replaceAll(RegExp(r',\s+,'), ',')
+              .trim();
+    } else if (_addressController.text.trim().isNotEmpty) {
+      deliveryAddress = _addressController.text.trim();
+    }
+
+    // Validate that we have an address
+    if (deliveryAddress.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter delivery address'),
@@ -1049,7 +1163,7 @@ class _SubscriptionSetupScreenState
           defaultQuantity: defaultQuantity,
           weeklyDays: selectedWeeklyDays,
           customDates: customDates,
-          deliveryAddress: _addressController.text.trim(),
+          deliveryAddress: deliveryAddress,
           deliveryInstructions: _instructionsController.text.trim(),
         ),
       ),

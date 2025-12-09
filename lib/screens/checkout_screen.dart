@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_new/controllers/address_controller.dart';
+import 'package:task_new/controllers/location_provider.dart';
 import 'package:task_new/controllers/cart_controller.dart';
 import 'package:task_new/controllers/verification_controller.dart';
 import 'package:task_new/controllers/coupon_card_controller.dart';
@@ -46,6 +47,8 @@ _loadSavedAddress();
   }
 void _loadSavedAddress() {
     final addressController = ref.read(addressProvider);
+    final locationState = ref.read(locationProvider);
+    
     if (addressController.address != null) {
       final savedAddress = addressController.address!;
       _addressController.text = savedAddress.fullAddress;
@@ -53,9 +56,88 @@ void _loadSavedAddress() {
       _emailController.text = savedAddress.email;
       _phoneController.text = savedAddress.phone;
       _instructionsController.text = savedAddress.deliveryInstructions ?? '';
+    } else if (locationState.detailedAddress != null) {
+      // Auto-populate from current location if no saved address
+      final loc = locationState.detailedAddress!;
+      final street = loc['street'] ?? '';
+      final city = loc['city'] ?? '';
+      final state = loc['state'] ?? '';
+      final zip = loc['zip'] ?? '';
+      final country = loc['country'] ?? 'India';
+      _addressController.text = [street, city, state, zip, country].where((s) => s.isNotEmpty).join(', ');
     }
   }
 
+  // void _selectCurrentLocation() {
+  //   final locationState = ref.read(locationProvider);
+  //   if (locationState.detailedAddress == null) return;
+    
+  //   final loc = locationState.detailedAddress!;
+  //   setState(() {
+  //     _nameController.text = '';
+  //     _emailController.text = '';
+  //     _phoneController.text = '';
+  //     final street = loc['street'] ?? '';
+  //     final city = loc['city'] ?? '';
+  //     final state = loc['state'] ?? '';
+  //     final zip = loc['zip'] ?? '';
+  //     final country = loc['country'] ?? 'India';
+  //     _addressController.text = [street, city, state, zip, country].where((s) => s.isNotEmpty).join(', ');
+  //     _instructionsController.text = '';
+  //   });
+  // }
+
+  void _selectCurrentLocation() {
+  final locationState = ref.read(locationProvider);
+  if (locationState.detailedAddress == null) return;
+  
+  final loc = locationState.detailedAddress!;
+  
+  // Get name from controller or use default
+  final userName = _nameController.text.trim().isNotEmpty 
+      ? _nameController.text.trim() 
+      : 'Current Location';
+  
+  // Create a new address from location
+  final locationAddress = AddressModel(
+    name: userName,
+    email: _emailController.text.trim(),
+    phone: _phoneController.text.trim(),
+    street: loc['street'] ?? '',
+    apartment: '',
+    city: loc['city'] ?? '',
+    state: loc['state'] ?? '',
+    zip: loc['zip'] ?? '',
+    country: loc['country'] ?? 'India',
+    deliveryInstructions: _instructionsController.text.trim(),
+  );
+  
+  // Update address (this will check for duplicates)
+  ref.read(addressProvider).updateAddress(locationAddress);
+  
+  setState(() {
+    if (_nameController.text.isEmpty) _nameController.text = 'Current Location';
+    final street = loc['street'] ?? '';
+    final city = loc['city'] ?? '';
+    final state = loc['state'] ?? '';
+    final zip = loc['zip'] ?? '';
+    final country = loc['country'] ?? 'India';
+    _addressController.text = [street, city, state, zip, country]
+        .where((s) => s.isNotEmpty)
+        .join(', ');
+    if (_instructionsController.text.isEmpty) {
+      _instructionsController.text = 'Deliver to current location';
+    }
+  });
+  
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Current location saved as address'),
+      backgroundColor: Colors.green,
+      duration: Duration(seconds: 2),
+    ),
+  );
+}
 
   void _initializeRazorpay() {
     _razorPayService = RazorPayService(
@@ -168,69 +250,166 @@ void _loadSavedAddress() {
                     title: 'Delivery Address',
                     child: Column(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey[200]!),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.lightBackground,
-                                  borderRadius: BorderRadius.circular(8),
+                        if (addressController.addresses.isNotEmpty) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
                                 ),
-                                child: const Icon(
-                                  Icons.location_on,
-                                  color: AppColors.darkGreen,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    const Text(
-                                      'Home',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                    const Icon(Icons.location_on, color: AppColors.darkGreen, size: 18),
+                                    const SizedBox(width: 8),
+                                    const Text('Saved Addresses', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    const Spacer(),
+                                    TextButton.icon(
+                                      onPressed: _showAddressDialog,
+                                      icon: const Icon(Icons.add, size: 18),
+                                      label: const Text('Add New'),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Column(
-
-                                      children: [
-
-                                    
-                                    Text(
-                                      addressController.address?.fullAddress ?? _addressController.text,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                    ],)
                                   ],
                                 ),
-                              ),
-                              TextButton(
-                                onPressed: _showAddressDialog,
-                                child: const Text(
-                                  'Change',
-                                  style: TextStyle(
-                                    color: AppColors.darkGreen,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                const SizedBox(height: 8),
+                                ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: addressController.addresses.length + 1,
+                                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                  itemBuilder: (ctx, idx) {
+                                    // Show current location as first option
+                                    if (idx == 0) {
+                                      final locationState = ref.watch(locationProvider);
+                                      final hasLocationData = locationState.detailedAddress != null && locationState.detailedAddress!.isNotEmpty;
+                                      
+                                      if (hasLocationData) {
+                                        return RadioListTile<String>(
+                                          value: 'current_location',
+                                          groupValue: addressController.address == null ? 'current_location' : null,
+                                          title: const Text('Current Location'),
+                                          subtitle: Text(
+                                            '${locationState.detailedAddress!['street'] ?? ''}, ${locationState.detailedAddress!['city'] ?? ''}, ${locationState.detailedAddress!['state'] ?? ''} ${locationState.detailedAddress!['zip'] ?? ''}',
+                                            style: TextStyle(color: Colors.grey[700]),
+                                          ),
+                                          onChanged: (v) {
+                                            if (v == null) return;
+                                            ref.read(addressProvider).clearAddress();
+                                            _selectCurrentLocation();
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Address selected'), backgroundColor: Colors.green, duration: Duration(seconds: 1)),
+                                            );
+                                          },
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    }
+                                    
+                                    final actualIdx = idx - 1;
+                                    final a = addressController.addresses[actualIdx];
+                                    final selectedIndex = addressController.address != null
+                                        ? addressController.addresses.indexWhere((x) => x.fullAddress == addressController.address!.fullAddress && x.name == addressController.address!.name)
+                                        : -1;
+                                    return RadioListTile<int>(
+                                      value: actualIdx,
+                                      groupValue: selectedIndex >= 0 && addressController.address != null ? selectedIndex : null,
+                                      title: Text(a.name),
+                                      subtitle: Text(a.fullAddress, style: TextStyle(color: Colors.grey[700])),
+                                      onChanged: (v) {
+                                        if (v == null) return;
+                                        ref.read(addressProvider).selectAddress(v);
+                                        final chosen = addressController.addresses[v];
+                                        setState(() {
+                                          _nameController.text = chosen.name;
+                                          _emailController.text = chosen.email;
+                                          _phoneController.text = chosen.phone;
+                                          _addressController.text = chosen.fullAddress;
+                                          _instructionsController.text = chosen.deliveryInstructions ?? '';
+                                        });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Address selected'), backgroundColor: Colors.green, duration: Duration(seconds: 1)),
+                                        );
+                                      },
+                                    );
+                                  },
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                        ],
+                        // Container(
+                        //   padding: const EdgeInsets.all(16),
+                        //   decoration: BoxDecoration(
+                        //     color: Colors.white,
+                        //     borderRadius: BorderRadius.circular(12),
+                        //     border: Border.all(color: Colors.grey[200]!),
+                        //   ),
+                        //   child: Row(
+                        //     children: [
+                        //       Container(
+                        //         padding: const EdgeInsets.all(8),
+                        //         decoration: BoxDecoration(
+                        //           color: AppColors.lightBackground,
+                        //           borderRadius: BorderRadius.circular(8),
+                        //         ),
+                        //         child: const Icon(
+                        //           Icons.location_on,
+                        //           color: AppColors.darkGreen,
+                        //           size: 20,
+                        //         ),
+                        //       ),
+                        //       const SizedBox(width: 12),
+                        //       Expanded(
+                        //         child: Column(
+                        //           crossAxisAlignment: CrossAxisAlignment.start,
+                        //           children: [
+                        //             const Text(
+                        //               'Home',
+                        //               style: TextStyle(
+                        //                 fontSize: 16,
+                        //                 fontWeight: FontWeight.w600,
+                        //               ),
+                        //             ),
+                        //             const SizedBox(height: 4),
+                        //             Column(
+
+                        //               children: [
+
+                                    
+                        //             Text(
+                        //               addressController.address?.fullAddress ?? _addressController.text,
+                        //               style: TextStyle(
+                        //                 fontSize: 14,
+                        //                 color: Colors.grey[600],
+                        //               ),
+                        //             ),
+                        //             ],)
+                        //           ],
+                        //         ),
+                        //       ),
+                        //       TextButton(
+                        //         onPressed: _showAddressDialog,
+                        //         child: const Text(
+                        //           'Change',
+                        //           style: TextStyle(
+                        //             color: AppColors.darkGreen,
+                        //             fontWeight: FontWeight.w600,
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -401,7 +580,8 @@ void _loadSavedAddress() {
     String title,
     String subtitle,
     double price,
-    IconData icon, {
+    IconData icon,
+    Widget child, {
     bool isSelected = false,
   }) {
     final isCurrentSelected = selectedDeliveryType == value;
@@ -455,11 +635,8 @@ void _loadSavedAddress() {
                           : AppColors.black87,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
+                  const SizedBox(height: 12),
+                  child,
                 ],
               ),
             ),
@@ -597,373 +774,340 @@ void _loadSavedAddress() {
   }
 
   void _showAddressDialog() {
-    final savedAddress = ref.read(addressProvider);
+    final locationState = ref.read(locationProvider);
+    final locationData = locationState.detailedAddress ?? {};
 
     final _dialogFormKey = GlobalKey<FormState>();
 
-    final nameCtrl = TextEditingController(text: savedAddress.address?.name ?? _nameController.text);
-    final emailCtrl = TextEditingController(text: savedAddress.address?.email ?? _emailController.text);
-    final phoneCtrl = TextEditingController(text: savedAddress.address?.phone ?? _phoneController.text);
-    final streetCtrl = TextEditingController(text: savedAddress.address?.street ?? '');
-    final apartmentCtrl = TextEditingController(text: savedAddress.address?.apartment ?? '');
-    final cityCtrl = TextEditingController(text: savedAddress.address?.city ?? '');
-    final stateCtrl = TextEditingController(text: savedAddress.address?.state ?? '');
-    final zipCtrl = TextEditingController(text: savedAddress.address?.zip ?? '');
-    final countryCtrl = TextEditingController(text: savedAddress.address?.country ?? 'India');
-    final instructionsCtrl = TextEditingController(text: savedAddress.address?.deliveryInstructions ?? _instructionsController.text);
+    // Controllers pre-filled from location data for new address
+    final nameCtrl = TextEditingController(text: _nameController.text);
+    final emailCtrl = TextEditingController(text: _emailController.text);
+    final phoneCtrl = TextEditingController(text: _phoneController.text);
+    final streetCtrl = TextEditingController(text: 
+   // locationData['street'] ??
+     '');
+    final apartmentCtrl = TextEditingController(text: '');
+    final cityCtrl = TextEditingController(text:
+   //  locationData['city'] ?? 
+     '');
+    final stateCtrl = TextEditingController(text: 
+   // locationData['state'] ??
+     '');
+    final zipCtrl = TextEditingController(text: 
+   // locationData['zip'] ??
+     '');
+    final countryCtrl = TextEditingController(text: 
+    //locationData['country'] ??
+     'India');
+    final instructionsCtrl = TextEditingController(text: '');
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.9,
-            maxWidth: MediaQuery.of(context).size.width * 0.95,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.darkGreen,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Colors.white, size: 28),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Add Delivery Address',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Fill in your complete address details',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setStateDialog) {
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+                maxWidth: MediaQuery.of(context).size.width * 0.95,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.darkGreen,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              // Form Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Form(
-                    key: _dialogFormKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        // Contact Information Section
-                        SectionHeader(
-                          icon: Icons.person_outline,
-                          title: 'Contact Information',
-                          subtitle: 'Your details for order updates',
-                        ),
-                        const SizedBox(height: 16),
-                        CustomTextField(
-                          label: 'First Name',
-                          controller: nameCtrl,
-                          hintText: 'Enter your name',
-                          prefixIcon: Icons.person,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your name';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        CustomTextField(
-                          label: 'Email Address',
-                          controller: emailCtrl,
-                          hintText: 'you@example.com',
-                          prefixIcon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
-                            }
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                              return 'Please enter a valid email';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        CustomTextField(
-                          label: 'Phone Number',
-                          controller: phoneCtrl,
-                          hintText: '9876543210',
-                          prefixIcon: Icons.phone_outlined,
-                          keyboardType: TextInputType.phone,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your phone number';
-                            }
-                            if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
-                              return 'Enter a valid 10-digit number';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        // Shipping Address Section
-                        SectionHeader(
-                          icon: Icons.home_outlined,
-                          title: 'Shipping Address',
-                          subtitle: 'Where should we deliver?',
-                        ),
-                        const SizedBox(height: 16),
-                        CustomTextField(
-                          label: 'Street Address',
-                          controller: streetCtrl,
-                          hintText: '123 Main Street',
-                          prefixIcon: Icons.location_on_outlined,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter street address';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        CustomTextField(
-                          label: 'Apartment, Suite, etc.',
-                          controller: apartmentCtrl,
-                          hintText: 'Plot No. / Apartment',
-                          prefixIcon: Icons.apartment_outlined,
-                          isOptional: true,
-                          validator: (value) => null,
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: CustomTextField(
-                                label: 'City',
-                                controller: cityCtrl,
-                                hintText: 'Your City',
-                                prefixIcon: Icons.location_city,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Required';
-                                  }
-                                  return null;
-                                },
+                        const Icon(Icons.location_on, color: Colors.white, size: 28),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Add New Address',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: CustomTextField(
-                                label: 'State',
-                                controller: stateCtrl,
-                                hintText: 'State',
-                                prefixIcon: Icons.map_outlined,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Required';
-                                  }
-                                  return null;
-                                },
+                              SizedBox(height: 4),
+                              Text(
+                                'Enter your delivery address',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: CustomTextField(
-                                label: 'ZIP Code',
-                                controller: zipCtrl,
-                                hintText: '110001',
-                                prefixIcon: Icons.mail_outline,
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Required';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: CustomTextField(
-                                label: 'Country',
-                                controller: countryCtrl,
-                                hintText: 'India',
-                                prefixIcon: Icons.public,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Required';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        // Delivery Instructions Section
-                        SectionHeader(
-                          icon: Icons.note_outlined,
-                          title: 'Delivery Instructions',
-                          subtitle: 'Optional but helpful',
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.grey[300]!,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.grey[50],
-                          ),
-                          child: TextField(
-                            controller: instructionsCtrl,
-                            maxLines: 3,
-                            decoration: InputDecoration(
-                              hintText:
-                                  'E.g., Ring doorbell twice, Leave at gate, etc.',
-                              hintStyle: TextStyle(color: Colors.grey[400]),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.all(16),
-                            ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Icon(Icons.close, color: Colors.white),
+                        ),
                       ],
                     ),
                   ),
-                ),
-              ),
-              // Action Buttons
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Colors.grey[200]!),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide(color: Colors.grey[300]!),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Cancel',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (_dialogFormKey.currentState!.validate()) {
-                            final newAddress = AddressModel(
-                              name: nameCtrl.text.trim(),
-                              email: emailCtrl.text.trim(),
-                              phone: phoneCtrl.text.trim(),
-                              street: streetCtrl.text.trim(),
-                              apartment: apartmentCtrl.text.trim(),
-                              city: cityCtrl.text.trim(),
-                              state: stateCtrl.text.trim(),
-                              zip: zipCtrl.text.trim(),
-                              country: countryCtrl.text.trim(),
-                              deliveryInstructions: instructionsCtrl.text.trim(),
-                            );
-                            ref.read(addressProvider).updateAddress(newAddress);
-                            // update the quick display fields in checkout
-                            setState(() {
-                              _nameController.text = nameCtrl.text.trim();
-                              _emailController.text = emailCtrl.text.trim();
-                              _phoneController.text = phoneCtrl.text.trim();
-                              _addressController.text = [
-                                streetCtrl.text.trim(),
-                                apartmentCtrl.text.trim(),
-                                cityCtrl.text.trim(),
-                                stateCtrl.text.trim(),
-                                zipCtrl.text.trim(),
-                                countryCtrl.text.trim(),
-                              ].where((s) => s.isNotEmpty).join(', ');
-                              _instructionsController.text = instructionsCtrl.text.trim();
-                            });
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(this.context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Address saved successfully!'),
-                                backgroundColor: Colors.green,
-                                duration: Duration(seconds: 2),
+                  // Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Always show the address form
+                          // Shipping Address Form
+                            SectionHeader(
+                              icon: Icons.home_outlined,
+                              title: 'Shipping Address',
+                              subtitle: 'Where should we deliver?',
+                            ),
+                            const SizedBox(height: 16),
+                            Form(
+                              key: _dialogFormKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomTextField(
+                                    label: 'Street Address',
+                                    controller: streetCtrl,
+                                    hintText: '123 Main Street',
+                                    prefixIcon: Icons.location_on_outlined,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter street address';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  CustomTextField(
+                                    label: 'Apartment, Suite, etc.',
+                                    controller: apartmentCtrl,
+                                    hintText: 'Plot No. / Apartment',
+                                    prefixIcon: Icons.apartment_outlined,
+                                    isOptional: true,
+                                    validator: (value) => null,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: CustomTextField(
+                                          label: 'City',
+                                          controller: cityCtrl,
+                                          hintText: 'Your City',
+                                          prefixIcon: Icons.location_city,
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return 'Required';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: CustomTextField(
+                                          label: 'State',
+                                          controller: stateCtrl,
+                                          hintText: 'State',
+                                          prefixIcon: Icons.map_outlined,
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return 'Required';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: CustomTextField(
+                                          label: 'ZIP Code',
+                                          controller: zipCtrl,
+                                          hintText: '110001',
+                                          prefixIcon: Icons.mail_outline,
+                                          keyboardType: TextInputType.number,
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return 'Required';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: CustomTextField(
+                                          label: 'Country',
+                                          controller: countryCtrl,
+                                          hintText: 'India',
+                                          prefixIcon: Icons.public,
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return 'Required';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  SectionHeader(
+                                    icon: Icons.note_outlined,
+                                    title: 'Delivery Instructions',
+                                    subtitle: 'Optional but helpful',
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.grey[50],
+                                    ),
+                                    child: TextField(
+                                      controller: instructionsCtrl,
+                                      maxLines: 3,
+                                      decoration: InputDecoration(
+                                        hintText: 'E.g., Ring doorbell twice, Leave at gate, etc.',
+                                        hintStyle: TextStyle(color: Colors.grey[400]),
+                                        border: InputBorder.none,
+                                        contentPadding: const EdgeInsets.all(16),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                ],
                               ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.darkGreen,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Save Address',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
+                            ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  // Action Buttons
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: Colors.grey[200]!),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: Colors.grey[300]!),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Validate and save new address
+                              if (_dialogFormKey.currentState!.validate()) {
+                                final newAddress = AddressModel(
+                                  name: nameCtrl.text.trim(),
+                                  email: emailCtrl.text.trim(),
+                                  phone: phoneCtrl.text.trim(),
+                                  street: streetCtrl.text.trim(),
+                                  apartment: apartmentCtrl.text.trim(),
+                                  city: cityCtrl.text.trim(),
+                                  state: stateCtrl.text.trim(),
+                                  zip: zipCtrl.text.trim(),
+                                  country: countryCtrl.text.trim(),
+                                  deliveryInstructions: instructionsCtrl.text.trim(),
+                                );
+                                ref.read(addressProvider).updateAddress(newAddress);
+                                // update the quick display fields in checkout
+                                setState(() {
+                                  _nameController.text = nameCtrl.text.trim();
+                                  _emailController.text = emailCtrl.text.trim();
+                                  _phoneController.text = phoneCtrl.text.trim();
+                                  _addressController.text = [
+                                    streetCtrl.text.trim(),
+                                    apartmentCtrl.text.trim(),
+                                    cityCtrl.text.trim(),
+                                    stateCtrl.text.trim(),
+                                    zipCtrl.text.trim(),
+                                    countryCtrl.text.trim(),
+                                  ].where((s) => s.isNotEmpty).join(', ');
+                                  _instructionsController.text = instructionsCtrl.text.trim();
+                                });
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(this.context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Address saved successfully!'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.darkGreen,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              'Save Address',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          );
+        });
+      },
     );
   }
     @override
