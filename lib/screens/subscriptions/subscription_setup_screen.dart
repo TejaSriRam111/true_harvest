@@ -719,12 +719,12 @@ class _SubscriptionSetupScreenState
                               ),
                             ],
                           ),
-                          TextButton(
-                            onPressed: () {
-                              _showAddressEditDialog(locationdata);
-                            },
-                            child: const Text('Edit'),
-                          ),
+                          // TextButton(
+                          //   onPressed: () {
+                          //     _showAddressEditDialog(locationdata);
+                          //   },
+                          //   child: const Text('Edit'),
+                          // ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -823,6 +823,7 @@ class _SubscriptionSetupScreenState
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Header
               Container(
@@ -865,11 +866,13 @@ class _SubscriptionSetupScreenState
                 ),
               ),
               // Content
-              Expanded(
+              Flexible(
+                fit: FlexFit.loose,
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Consumer(builder: (ctx, ref2, _) {
                     return AddressFormFields(
+                      includePersonalInfo: false,
                       formKey: _dialogFormKey,
                     );
                   }),
@@ -921,6 +924,7 @@ class _SubscriptionSetupScreenState
                                 gravity: ToastGravity.BOTTOM,
                               );
                             }
+                            
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.darkGreen,
