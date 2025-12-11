@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:task_new/controllers/location_provider.dart';
-import 'package:task_new/controllers/subscription_controller.dart';
 import 'package:task_new/controllers/address_controller.dart';
-import 'package:task_new/controllers/address_form_controller.dart';
+import 'package:task_new/controllers/location_provider.dart';
 import 'package:task_new/controllers/subscription_service.dart';
 import 'package:task_new/models/advanced_subscription_model.dart';
 import 'package:task_new/models/product_model.dart';
-import 'package:task_new/models/address_model.dart';
-import 'package:task_new/models/address_form_state.dart';
 import 'package:task_new/models/subscription_plan_template.dart';
 import 'package:task_new/screens/subscriptions/subscription_checkout_screen.dart';
-import 'package:task_new/widgets/address_form_fields.dart';
 import 'package:task_new/utils/app_colors.dart';
 
 class SubscriptionSetupScreen extends ConsumerStatefulWidget {
@@ -58,20 +53,25 @@ class _SubscriptionSetupScreenState
       default:
         selectedPattern = DeliveryPattern.daily;
     }
-    _loadAddressData();
+   Future(() => _loadAddressData()); 
   }
 
-  void _loadAddressData() {
-    final addressController = ref.read(addressProvider);
-    final locationState = ref.read(locationProvider);
-    final formCtrl = ref.read(addressFormProvider);
+void _loadAddressData() {
+  final addressController = ref.read(addressProvider);
+  final locationState = ref.read(locationProvider);
 
-    if (addressController.address != null) {
-      formCtrl.loadAddress(addressController.address!);
-    } else if (locationState.detailedAddress != null) {
-      Future(() => formCtrl.loadFromLocation(locationState.detailedAddress!));
-    }
+  if (addressController.address != null) {
+    // If we have a saved address, use it
+    addressController.selectAddress(addressController.address!);
+  } else if (locationState.detailedAddress != null) {
+    // If we have a current location, use it as the address
+    addressController.updateAddress(locationState.detailedAddress!);
+    addressController.selectAddress(locationState.detailedAddress!);
+  } else {
+    // If no address is available, ensure we have a clean state
+    // addressController.selectedAddress.id = null;
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -636,8 +636,8 @@ class _SubscriptionSetupScreenState
                     children: [
                       // Complete Address as paragraph
                       Text(
-                        //'${savedAddress.name}, ${savedAddress.phone}, ${savedAddress.email},
-                        '${savedAddress.street}, ${savedAddress.apartment}, ${savedAddress.city}, ${savedAddress.state} ${savedAddress.zip}, ${savedAddress.country}',
+                        //'${savedAddress.name}, ${savedAddress.phone}, ${savedAddress.email}, 
+                        '${savedAddress.street}, ${savedAddress.city}, ${savedAddress.state} ${savedAddress.zip}, ${savedAddress.country}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[700],
@@ -784,178 +784,171 @@ class _SubscriptionSetupScreenState
     );
   }
 
-  void _showAddressEditDialog(AddressFormState? locationdata) {
-    // Initialize form controller with location data
-    if (locationdata != null) {
-      final formCtrl = ref.read(addressFormProvider);
-      formCtrl.loadAddress(
-        AddressModel(
-          id: '',
-          name: locationdata.name,
-          email: locationdata.email,
-          phone: locationdata.phone,
-          street: locationdata.street,
-          apartment: locationdata.apartment,
-          city: locationdata.city,
-          state: locationdata.state,
-          zip: locationdata.zip,
-          country: locationdata.country,
-          deliveryInstructions: locationdata.instructions.isEmpty
-              ? null
-              : locationdata.instructions,
-        ),
-      );
-    }
+  // void _showAddressEditDialog(AddressModel? locationdata) {
+  //   // Initialize form controller with location data
+  //   if (locationdata != null) {
+  //     final formCtrl = ref.read(addressProvider);
+  //     formCtrl.loadAddress(AddressModel(
+  //       id: '',
+  //       name: locationdata.name,
+  //       email: locationdata.email,
+  //       phone: locationdata.phone,
+  //       street: locationdata.street,
+  //       apartment: locationdata.apartment,
+  //       city: locationdata.city,
+  //       state: locationdata.state,
+  //       zip: locationdata.zip,
+  //       country: locationdata.country,
+  //       deliveryInstructions: locationdata.instructions.isEmpty ? null : locationdata.instructions,
+  //     ));
+  //   }
 
-    final _dialogFormKey = GlobalKey<FormState>();
+  //   final _dialogFormKey = GlobalKey<FormState>();
 
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(ctx).size.height * 0.9,
-            maxWidth: MediaQuery.of(ctx).size.width * 0.95,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.darkGreen,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.location_on, color: Colors.white, size: 28),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Delivery Address',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Enter your delivery address',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Content
-              Flexible(
-                fit: FlexFit.loose,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Consumer(
-                    builder: (ctx, ref2, _) {
-                      return AddressFormFields(
-                        includePersonalInfo: false,
-                        formKey: _dialogFormKey,
-                      );
-                    },
-                  ),
-                ),
-              ),
-              // Action Buttons
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: Colors.grey[200]!)),
-                ),
-                child: Consumer(
-                  builder: (ctx, ref2, _) {
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              side: BorderSide(color: Colors.grey[300]!),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (_dialogFormKey.currentState!.validate()) {
-                                final address = ref2
-                                    .read(addressFormProvider)
-                                    .buildAddressModel();
-                                ref2.read(addressProvider).addAddress(address);
-                                Navigator.pop(ctx);
-                                Fluttertoast.showToast(
-                                  msg: "Address saved successfully",
-                                  backgroundColor: AppColors.darkGreen,
-                                  textColor: AppColors.white,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.darkGreen,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: const Text(
-                              'Save Address',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  //   showDialog(
+  //     context: context,
+  //     builder: (ctx) => Dialog(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //       child: Container(
+  //         constraints: BoxConstraints(
+  //           maxHeight: MediaQuery.of(ctx).size.height * 0.9,
+  //           maxWidth: MediaQuery.of(ctx).size.width * 0.95,
+  //         ),
+  //         decoration: BoxDecoration(
+  //           color: Colors.white,
+  //           borderRadius: BorderRadius.circular(16),
+  //         ),
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             // Header
+  //             Container(
+  //               padding: const EdgeInsets.all(20),
+  //               decoration: BoxDecoration(
+  //                 color: AppColors.darkGreen,
+  //                 borderRadius: const BorderRadius.only(
+  //                   topLeft: Radius.circular(16),
+  //                   topRight: Radius.circular(16),
+  //                 ),
+  //               ),
+  //               child: const Row(
+  //                 children: [
+  //                   Icon(Icons.location_on, color: Colors.white, size: 28),
+  //                   SizedBox(width: 12),
+  //                   Expanded(
+  //                     child: Column(
+  //                       crossAxisAlignment: CrossAxisAlignment.start,
+  //                       children: [
+  //                         Text(
+  //                           'Delivery Address',
+  //                           style: TextStyle(
+  //                             fontSize: 20,
+  //                             fontWeight: FontWeight.bold,
+  //                             color: Colors.white,
+  //                           ),
+  //                         ),
+  //                         SizedBox(height: 4),
+  //                         Text(
+  //                           'Enter your delivery address',
+  //                           style: TextStyle(
+  //                             fontSize: 13,
+  //                             color: Colors.white70,
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             // Content
+  //             Flexible(
+  //               fit: FlexFit.loose,
+  //               child: SingleChildScrollView(
+  //                 padding: const EdgeInsets.all(20),
+  //                 child: Consumer(builder: (ctx, ref2, _) {
+  //                   return AddressFormFields(
+  //                     includePersonalInfo: false,
+  //                     formKey: _dialogFormKey,
+  //                   );
+  //                 }),
+  //               ),
+  //             ),
+  //             // Action Buttons
+  //             Container(
+  //               padding: const EdgeInsets.all(16),
+  //               decoration: BoxDecoration(
+  //                 border: Border(
+  //                   top: BorderSide(color: Colors.grey[200]!),
+  //                 ),
+  //               ),
+  //               child: Consumer(builder: (ctx, ref2, _) {
+  //                 return Row(
+  //                   children: [
+  //                     Expanded(
+  //                       child: OutlinedButton(
+  //                         onPressed: () => Navigator.pop(ctx),
+  //                         style: OutlinedButton.styleFrom(
+  //                           padding: const EdgeInsets.symmetric(vertical: 14),
+  //                           side: BorderSide(color: Colors.grey[300]!),
+  //                           shape: RoundedRectangleBorder(
+  //                             borderRadius: BorderRadius.circular(10),
+  //                           ),
+  //                         ),
+  //                         child: const Text(
+  //                           'Cancel',
+  //                           style: TextStyle(
+  //                             fontSize: 16,
+  //                             fontWeight: FontWeight.w600,
+  //                             color: Colors.black87,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     const SizedBox(width: 12),
+  //                     Expanded(
+  //                       child: ElevatedButton(
+  //                         onPressed: () {
+  //                           if (_dialogFormKey.currentState!.validate()) {
+  //                             final address = ref2.read(addressProvider).buildAddressModel();
+  //                             ref2.read(addressProvider).addAddress(address);
+  //                             Navigator.pop(ctx);
+  //                             Fluttertoast.showToast(
+  //                               msg: "Address saved successfully",
+  //                               backgroundColor: AppColors.darkGreen,
+  //                               textColor: AppColors.white,
+  //                               gravity: ToastGravity.BOTTOM,
+  //                             );
+  //                           }
+                            
+  //                         },
+  //                         style: ElevatedButton.styleFrom(
+  //                           backgroundColor: AppColors.darkGreen,
+  //                           padding: const EdgeInsets.symmetric(vertical: 14),
+  //                           shape: RoundedRectangleBorder(
+  //                             borderRadius: BorderRadius.circular(10),
+  //                           ),
+  //                         ),
+  //                         child: const Text(
+  //                           'Save Address',
+  //                           style: TextStyle(
+  //                             fontSize: 16,
+  //                             fontWeight: FontWeight.w600,
+  //                             color: Colors.white,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 );
+  //               }),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildPriceSummary() {
     final totalPrice = _calculateTotalPrice();
@@ -1151,7 +1144,6 @@ class _SubscriptionSetupScreenState
     if (savedAddress != null) {
       deliveryAddress = [
         savedAddress.street,
-        savedAddress.apartment,
         savedAddress.city,
         savedAddress.state,
         savedAddress.zip,
@@ -1169,9 +1161,9 @@ class _SubscriptionSetupScreenState
           : locationdata.fullAddress;
     } else {
       // Try to get address from form controller
-      final formCtrl = ref.read(addressFormProvider);
-      if (formCtrl.fullAddress.isNotEmpty) {
-        deliveryAddress = formCtrl.fullAddress;
+      final formCtrl = ref.read(addressProvider);
+      if (formCtrl.address != null && formCtrl.address!.fullAddress.isNotEmpty) {
+        deliveryAddress = formCtrl.address!.fullAddress;
       }
     }
 
@@ -1238,7 +1230,7 @@ class _SubscriptionSetupScreenState
           weeklyDays: selectedWeeklyDays,
           customDates: customDates,
           deliveryAddress: deliveryAddress,
-          deliveryInstructions: ref.read(addressFormProvider).instructions,
+          deliveryInstructions: '',
         ),
       ),
     );

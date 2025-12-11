@@ -1,14 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:task_new/controllers/address_controller.dart';
-import 'package:task_new/controllers/address_form_controller.dart';
+import 'package:task_new/controllers/auth_controller.dart';
 import 'package:task_new/controllers/location_provider.dart';
 import 'package:task_new/controllers/subscription_service.dart';
 import 'package:task_new/controllers/whishlist_provider.dart';
-import 'package:task_new/utils/app_colors.dart';
 import 'package:task_new/routes/app_routes.dart';
-import 'package:task_new/controllers/verification_controller.dart';
+import 'package:task_new/utils/app_colors.dart';
 import 'package:task_new/widgets/address_form_fields.dart';
 import 'package:task_new/widgets/address_selection_list.dart';
 
@@ -23,18 +23,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAddressData();
+   Future(() => _loadAddressData());
   }
 
   void _loadAddressData() {
     final addressController = ref.read(addressProvider);
     final locationState = ref.read(locationProvider);
-    final formCtrl = ref.read(addressFormProvider);
+    final formCtrl = ref.read(addressProvider);
 
     if (addressController.address != null) {
-      formCtrl.loadAddress(addressController.address!);
+      formCtrl.updateAddress(addressController.address!);
     } else if (locationState.detailedAddress != null) {
-      Future(() => formCtrl.loadFromLocation(locationState.detailedAddress!));
+      formCtrl.updateAddress(locationState.detailedAddress!);
     }
   }
 
@@ -55,6 +55,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
+        automaticallyImplyLeading: false,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -160,142 +161,78 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildProfileHeader() {
-    final verificationService = ref.watch(verificationServiceProvider);
-    final userProfile = verificationService.userProfile;
+    // final userProfile = viewController.userProfile;
+    
+    return Consumer  (
+      builder: (context, ref, child) {
+            final viewController = ref.read(authProvider);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Profile Avatar
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.darkGreen.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Icon(Icons.person, size: 40, color: AppColors.darkGreen),
-          ),
-          const SizedBox(width: 16),
-          // User Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          child: Row(
+            children: [
+              // Profile Avatar
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.darkGreen.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: Icon(Icons.person, size: 40, color: AppColors.darkGreen),
+              ),
+              const SizedBox(width: 16),
+              // User Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      userProfile?.name ?? 'uma',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          viewController.userProfile?.name ?? 'uma',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
-                    if (verificationService.isVerified) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.verified,
-                              size: 14,
-                              color: Colors.green[700],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Verified',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.green[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    const SizedBox(height: 4),
+                    Text(
+                     viewController. userProfile?.email ?? 'uma.e@example.com',
+                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                     viewController. userProfile?.mobile ?? '+91 6305447441',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    ),
+                  
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  userProfile?.email ?? 'uma.e@example.com',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  userProfile?.mobile ?? '+91 6305447441',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                ),
-                if (!verificationService.isVerified) ...[
-                  const SizedBox(height: 8),
-                  // GestureDetector(
-                  //   onTap: () => _showVerificationDialog(),
-                  //   child: Container(
-                  //     padding: const EdgeInsets.symmetric(
-                  //       horizontal: 12,
-                  //       vertical: 6,
-                  //     ),
-                  //     decoration: BoxDecoration(
-                  //       color: AppColors.darkGreen.withOpacity(0.1),
-                  //       borderRadius: BorderRadius.circular(16),
-                  //       border: Border.all(
-                  //         color: AppColors.darkGreen.withOpacity(0.3),
-                  //       ),
-                  //     ),
-                  //     child: Row(
-                  //       mainAxisSize: MainAxisSize.min,
-                  //       children: [
-                  //         Icon(
-                  //           Icons.local_offer,
-                  //           size: 14,
-                  //           color: AppColors.darkGreen,
-                  //         ),
-                  //         const SizedBox(width: 4),
-                  //         Text(
-                  //           'Verify for 10% discount',
-                  //           style: TextStyle(
-                  //             fontSize: 12,
-                  //             fontWeight: FontWeight.w600,
-                  //             color: AppColors.darkGreen,
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
-                ],
-              ],
-            ),
+              ),
+              // Edit Button
+              IconButton(
+                onPressed: () => _showPersonalInfoDialog(),
+                icon: Icon(Icons.edit_outlined, color: AppColors.darkGreen),
+              ),
+            ],
           ),
-          // Edit Button
-          IconButton(
-            onPressed: () => _showPersonalInfoDialog(),
-            icon: Icon(Icons.edit_outlined, color: AppColors.darkGreen),
-          ),
-        ],
-      ),
+        );
+      }
     );
   }
 
@@ -533,7 +470,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void _showAddressesDialog() {
     final _dialogFormKey = GlobalKey<FormState>();
     // Clear only fields while preserving address selection state
-    ref.read(addressFormProvider).clearFieldsOnly();
+    // ref.read(addressProvider).clearAddressFields();
 
     showDialog(
       context: context,
@@ -628,53 +565,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border(top: BorderSide(color: Colors.grey[200]!)),
+                    border: Border(
+                      top: BorderSide(color: Colors.grey[200]!),
+                    ),
                   ),
-                  child: Consumer(
-                    builder: (ctx, ref, _) {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                side: BorderSide(color: Colors.grey[300]!),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
+                  child: Consumer(builder: (ctx, ref, _) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: Colors.grey[300]!),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
-                                ),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                if (_dialogFormKey.currentState!.validate()) {
-                                  final formCtrl = ref.read(
-                                    addressFormProvider,
-                                  );
-                                  final addressCtrl = ref.read(addressProvider);
-
-                                  final address = formCtrl.buildAddressModel();
-                                  addressCtrl.addAddress(address);
-                                  // Select the newly added address and sync form
-                                  addressCtrl.selectAddressById(address.id);
-                                  formCtrl.loadAddress(address);
-
-                                  Navigator.pop(context);
-                                  Fluttertoast.showToast(
-                                    msg: 'Address saved successfully!',
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (_dialogFormKey.currentState!.validate()) {
+                              
+                                Navigator.pop(context);
+   Fluttertoast.showToast(msg: 'Address saved successfully!',
                                     backgroundColor: AppColors.darkGreen,
                                     textColor: AppColors.white,
                                     gravity: ToastGravity.BOTTOM,
@@ -714,54 +639,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildSavedAddressesPanel() {
-    return Consumer(
-      builder: (context, ref, _) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.location_on_outlined, size: 20),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Saved Addresses',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: () => _showAddressesDialog(),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add New'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              AddressSelectionList(
-                onAddressSelected: () {
-                  // Address selection syncs to form controller automatically
-                },
-                onLocationSelected: () {
-                  // Location selection syncs to form controller automatically
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    return Consumer(builder: (context, ref, _) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.location_on_outlined, size: 20),
+                const SizedBox(width: 8),
+                const Text('Saved Addresses', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () => _showAddressesDialog(),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add New'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            AddressSelectionList(
+              onAddressSelected: () {
+                
+                // Address selection syncs to form controller automatically
+                setState(() {});
+              },
+              onLocationSelected: () {
+                // Location selection syncs to form controller automatically
+                setState(() {});
+              },
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   void _showPaymentMethodsDialog() {
@@ -890,35 +813,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text(
-          'Are you sure you want to logout? This will clear your saved addresses.',
+void _showLogoutDialog() {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Logout'),
+      content: const Text('Are you sure you want to logout? This will clear your saved addresses.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              // Clear addresses from SharedPreferences
-              await ref.read(addressProvider).clearAll();
-              Navigator.pop(context);
-              // Navigate to login screen
-              AppRoutes.navigateTo(context, '/login');
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-  }
+        TextButton(
+          onPressed: () async {
+            // Perform full logout: clear addresses, clear persisted user, sign out from Firebase
+            final addressCtrl = ref.read(addressProvider);
+            // Clear addresses
+            await addressCtrl.clearAddresses();
+            // Clear persisted profile
+            // await viewController.logout();
+            // Sign out Firebase auth if used
+            try {
+              await FirebaseAuth.instance.signOut();
+            } catch (_) {}
 
+            Navigator.pop(context);
+            // Navigate to login screen and clear navigation stack
+            AppRoutes.navigateAndClearStack(context, AppRoutes.login);
+          },
+          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          child: const Text('Logout'),
+        ),
+      ],
+    ),
+  );
+}
   // void _showLogoutDialog() {
   //   showDialog(
   //     context: context,

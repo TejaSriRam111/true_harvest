@@ -1,10 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_new/controllers/cart_controller.dart';
 import 'package:task_new/controllers/coupon_card_controller.dart';
-import 'package:task_new/controllers/verification_controller.dart';
 import 'package:task_new/utils/app_colors.dart';
 
 class CartSummaryCard extends ConsumerWidget {
@@ -13,21 +10,16 @@ class CartSummaryCard extends ConsumerWidget {
   final double total;
 
   const CartSummaryCard({
-    Key? key,
+    super.key,
     required this.subtotal,
     required this.deliveryFee,
     required this.total,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartController = ref.watch(cartProvider);
-    final verificationService = ref.watch(verificationServiceProvider);
-    final coupon=ref.watch(couponProvider);
-    final totalBeforeDiscount = subtotal + deliveryFee;
-    final discountAmount = ref.watch(discountAmountProvider(totalBeforeDiscount));
-    final couponDiscount=coupon.discountAmount;
-    final finalTotal=totalBeforeDiscount-discountAmount-couponDiscount;
+    final coupon = ref.watch(couponProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -48,11 +40,7 @@ class CartSummaryCard extends ConsumerWidget {
           // Header
           Row(
             children: [
-              Icon(
-                Icons.receipt_long,
-                color: AppColors.darkGreen,
-                size: 20,
-              ),
+              Icon(Icons.receipt_long, color: AppColors.darkGreen, size: 20),
               const SizedBox(width: 8),
               const Text(
                 'Order Summary',
@@ -64,7 +52,7 @@ class CartSummaryCard extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
 
           // Cart Items
@@ -125,13 +113,9 @@ class CartSummaryCard extends ConsumerWidget {
           _buildPriceRow('Delivery Fee', deliveryFee),
           const SizedBox(height: 8),
           _buildPriceRow('Tax', 0.0),
-          
+
           // Discount Row
-          if (discountAmount > 0) ...[
-            const SizedBox(height: 8),
-            _buildDiscountRow(discountAmount,),
-          ],
-          if(coupon.hasCouponApplied) ...[
+          if (coupon.hasCouponApplied) ...[
             const SizedBox(height: 8),
             _buildCouponDiscountRow(coupon),
           ],
@@ -139,95 +123,36 @@ class CartSummaryCard extends ConsumerWidget {
           const Divider(height: 24, thickness: 1),
 
           // Total
-        //  _buildTotalRow(total, discountAmount > 0,orginalTotal: hasDiscount ? orginalTotal : null),
-_buildTotalRow(
-  total, 
-  discountAmount > 0 || coupon.hasCouponApplied,
-  orginalTotal: (discountAmount > 0 || coupon.hasCouponApplied) ? subtotal : null,
-),
-          // Savings Summary
-          if (discountAmount > 0) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green[200]!),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.savings, color: Colors.green[700], size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'You\'re saving ₹${discountAmount.toStringAsFixed(2)}!',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.green[800],
-                          ),
-                        ),
-                        Text(
-                          'Animal Kart discount applied',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.green[700],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '10% OFF',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[800],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          //  _buildTotalRow(total, discountAmount > 0,orginalTotal: hasDiscount ? orginalTotal : null),
         ],
       ),
     );
   }
-Widget _buildCouponDiscountRow( CouponProvider coupon) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Text(
-        'Coupon (${coupon.appliedCoupon})',
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: Colors.grey[600],
-          
+
+  Widget _buildCouponDiscountRow(CouponProvider coupon) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Coupon (${coupon.appliedCoupon})',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[600],
+          ),
         ),
-      ),
-      Text(
-        '-₹${coupon.discountAmount.toStringAsFixed(2)}',
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: Colors.red,
+        Text(
+          '-₹${coupon.discountAmount.toStringAsFixed(2)}',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.red,
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
+
   Widget _buildPriceRow(String label, double amount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -252,83 +177,6 @@ Widget _buildCouponDiscountRow( CouponProvider coupon) {
     );
   }
 
-  Widget _buildDiscountRow(double discountAmount) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.local_offer, size: 16, color: Colors.green[700]),
-            const SizedBox(width: 4),
-            Text(
-              'Animal Kart Discount (10%)',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.green[700],
-              ),
-            ),
-          ],
-        ),
-        Text(
-          '-₹${discountAmount.toStringAsFixed(2)}',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.green[700],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTotalRow(double total, bool hasDiscount, {double? orginalTotal}) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-
-      Text(
-        hasDiscount ? 'Total' : 'Total',
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-      ),
-
-      // Right side amounts
-      Row(
-        children: [
-          // Show strikethrough only if discount exists
-          if (hasDiscount && orginalTotal != null) ...[
-            Text(
-              "₹${orginalTotal.toStringAsFixed(2)}",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
-                decoration: TextDecoration.lineThrough,
-                decorationThickness: 2.0,
-                decorationColor: Colors.red,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-
-          // Final discounted / normal total
-          Text(
-            '₹${total.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: hasDiscount ? Colors.green[700] : AppColors.darkGreen,
-            ),
-          ),
-        ],
-      ),
-    ],
-  );
-}
+ 
 
 }

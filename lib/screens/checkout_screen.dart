@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:task_new/controllers/address_controller.dart';
-import 'package:task_new/controllers/address_form_controller.dart';
-import 'package:task_new/controllers/location_provider.dart';
 import 'package:task_new/controllers/cart_controller.dart';
-import 'package:task_new/controllers/verification_controller.dart';
 import 'package:task_new/controllers/coupon_card_controller.dart';
+import 'package:task_new/controllers/location_provider.dart';
 import 'package:task_new/screens/apply_coupon_card_screen.dart';
 import 'package:task_new/screens/payment_success_screen.dart';
 import 'package:task_new/services/razorpay_service.dart';
 import 'package:task_new/utils/app_colors.dart';
-import 'package:task_new/widgets/verification_dialog.dart';
-import 'package:task_new/widgets/custom_alert_dialogue.dart';
-import 'package:task_new/widgets/cart_summary_card.dart';
 import 'package:task_new/widgets/address_form_fields.dart';
 import 'package:task_new/widgets/address_selection_list.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:task_new/widgets/cart_summary_card.dart';
+import 'package:task_new/widgets/custom_alert_dialogue.dart';
+import 'package:task_new/widgets/custom_floating_toast.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -38,39 +36,24 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     _initializeRazorpay();
   }
 
-  void _loadAddressData() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final formCtrl = ref.read(addressFormProvider);
-      final addressCtrl = ref.read(addressProvider);
-      final locationState = ref.read(locationProvider);
+  
+void _loadAddressData() {
+  final addressController = ref.read(addressProvider);
+  final locationState = ref.read(locationProvider);
 
-      if (addressCtrl.address != null) {
-        formCtrl.loadAddress(addressCtrl.address!);
-      } else if (locationState.detailedAddress != null) {
-        Future(() => formCtrl.loadFromLocation(locationState.detailedAddress!));
-      }
-    });
+  if (addressController.address != null) {
+    // If we have a saved address, use it
+    addressController.selectAddress(addressController.address!);
+  } else if (locationState.detailedAddress != null) {
+    // If we have a current location, use it as the address
+    addressController.updateAddress(locationState.detailedAddress!);
+    addressController.selectAddress(locationState.detailedAddress!);
+  } else {
+    // If no address is available, ensure we have a clean state
+    addressController.clearAddresses();
   }
+}
 
-  void _selectCurrentLocation() {
-    final locationState = ref.read(locationProvider);
-    if (locationState.detailedAddress == null) return;
-
-    Future(
-      () => ref
-          .read(addressFormProvider)
-          .loadFromLocation(locationState.detailedAddress!),
-    );
-
-    Fluttertoast.showToast(
-      msg: "Current location selected",
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: AppColors.darkGreen,
-      textColor: AppColors.white,
-      fontSize: 16.0,
-    );
-  }
 
   void _initializeRazorpay() {
     _razorPayService = RazorPayService(
@@ -119,31 +102,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final cartController = ref.watch(cartProvider);
-    final verificationService = ref.watch(verificationServiceProvider);
-    final coupon = ref.watch(couponProvider);
     final subtotal = cartController.subtotal;
     final addressController = ref.watch(addressProvider);
     final deliveryFee = _getDeliveryFee();
-    final totalBeforeDiscount = subtotal + deliveryFee;
+  
+   
 
-    // Calculate verification discount
-    final verificationDiscount =
-        verificationService.isEligibleForDiscount(
-          cartController.items,
-          totalBeforeDiscount,
-        )
-        ? verificationService.calculateDiscount(totalBeforeDiscount)
-        : 0.0;
 
-    // Calculate final total with all discounts applied
-    final total =
-        totalBeforeDiscount - verificationDiscount - coupon.discountAmount;
     // Sync form controller when address changes
     if (addressController.address != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final saved = addressController.address!;
-        final formCtrl = ref.read(addressFormProvider);
-        formCtrl.loadAddress(saved);
+        final formCtrl = ref.read(addressProvider);
+        formCtrl.updateAddress(saved);
       });
     }
 
@@ -294,7 +265,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   CartSummaryCard(
                     subtotal: subtotal,
                     deliveryFee: deliveryFee,
-                    total: total,
+                    total: 00,
                   ),
 
                   const SizedBox(height: 100), // Space for bottom button
@@ -330,7 +301,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       ),
                     ),
                     Text(
-                      '₹${total.toStringAsFixed(2)}',
+                      '₹${00}',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -362,7 +333,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           )
                         : Text(
                             selectedPaymentMethod == 'razorpay'
-                                ? 'Pay ₹${total.toStringAsFixed(2)}'
+                                ? 'Pay ₹${00}'
                                 : 'Place Order',
                             style: TextStyle(
                               fontSize: 16,
@@ -395,87 +366,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         const SizedBox(height: 12),
         child,
       ],
-    );
-  }
-
-  Widget _buildDeliveryOption(
-    String value,
-    String title,
-    String subtitle,
-    double price,
-    IconData icon,
-    Widget child, {
-    bool isSelected = false,
-  }) {
-    final isCurrentSelected = selectedDeliveryType == value;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedDeliveryType = value;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isCurrentSelected ? AppColors.darkGreen : AppColors.grey,
-            width: isCurrentSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isCurrentSelected
-                    ? AppColors.darkGreen.withOpacity(0.1)
-                    : AppColors.lightBackground,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: isCurrentSelected
-                    ? AppColors.darkGreen
-                    : Colors.grey[600],
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isCurrentSelected
-                          ? AppColors.darkGreen
-                          : AppColors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  child,
-                ],
-              ),
-            ),
-            Text(
-              '₹${price.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isCurrentSelected
-                    ? AppColors.darkGreen
-                    : AppColors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -601,7 +491,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     final _dialogFormKey = GlobalKey<FormState>();
     // Clear only fields while preserving address selection state
-    ref.read(addressFormProvider).clearFieldsOnly();
+    // ref.read(addressProvider).clearFieldsOnly();
 
     showDialog(
       context: context,
@@ -730,24 +620,27 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             child: ElevatedButton(
                               onPressed: () {
                                 // Validate and save new address
-                                if (_dialogFormKey.currentState!.validate()) {
-                                  final formCtrl = ref.read(
-                                    addressFormProvider,
-                                  );
-                                  final addressCtrl = ref.read(addressProvider);
-                                  final address = formCtrl.buildAddressModel();
-                                  addressCtrl.addAddress(address);
-                                  // Select newly added address and sync form
-                                  addressCtrl.selectAddressById(address.id);
-                                  formCtrl.loadAddress(address);
-                                  Navigator.pop(ctx);
+                               if (_dialogFormKey.currentState!.validate()) {
+  try {
 
-                                  Fluttertoast.showToast(
-                                    msg: 'Address saved successfully!',
-                                    backgroundColor: AppColors.darkGreen,
-                                    textColor: AppColors.white,
-                                  );
-                                }
+  
+
+   
+    if (mounted) {
+      Navigator.pop(ctx);
+      CustomFloatingToast.showToast(
+        'Address saved successfully!',
+    
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      CustomFloatingToast.showToast(
+        'Failed to save address',
+      );
+    }
+  }
+}
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.darkGreen,
@@ -821,15 +714,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     });
 
     final total = _getTotalAmount();
-    final formCtrl = ref.read(addressFormProvider);
+    final formCtrl = ref.read(addressProvider);
 
     debugPrint('Opening Razorpay with amount: ₹$total');
 
     _razorPayService?.openPayment(
       amount: total,
-      customerName: formCtrl.name,
-      customerEmail: formCtrl.email,
-      customerPhone: formCtrl.phone,
+      customerName: formCtrl.address?.name ?? '',
+      // customerEmail: formCtrl.address?.email ?? '',
+      // customerPhone: formCtrl.address?.phone ?? '',
       description: 'True Harvest - Fresh Organic Products',
     );
   }
@@ -870,145 +763,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   double _getTotalAmount() {
     final cartController = ref.read(cartProvider);
-    final verificationService = ref.read(verificationServiceProvider);
     final coupon = ref.read(couponProvider);
     final subtotal = cartController.subtotal;
     final deliveryFee = _getDeliveryFee();
     final totalBeforeDiscount = subtotal + deliveryFee;
 
-    // Calculate verification discount
-    final verificationDiscount =
-        verificationService.isEligibleForDiscount(
-          cartController.items,
-          totalBeforeDiscount,
-        )
-        ? verificationService.calculateDiscount(totalBeforeDiscount)
-        : 0.0;
+ 
 
     // Calculate final total with all discounts applied
     final double finalTotal =
-        totalBeforeDiscount - verificationDiscount - coupon.discountAmount;
+        totalBeforeDiscount - coupon.discountAmount;
 
     return finalTotal > 0 ? finalTotal : 0.0; // Ensure total is never negative
   }
 
-  Widget _buildVerificationBanner(verificationService, double discountAmount) {
-    if (verificationService.isVerified && discountAmount > 0) {
-      // Show success banner for verified users with discount
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.green[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.green[200]!),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.verified_user,
-                color: Colors.green[700],
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '🎉 Animal Kart Discount Applied!',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green[800],
-                    ),
-                  ),
-                  Text(
-                    'You saved ₹${discountAmount.toStringAsFixed(2)} on this order',
-                    style: TextStyle(fontSize: 14, color: Colors.green[700]),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    } else if (!verificationService.isVerified) {
-      // Show verification offer banner
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.darkGreen.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.darkGreen.withOpacity(0.3)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.darkGreen.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.local_offer,
-                color: AppColors.darkGreen,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Animal Kart User? Get 10% OFF!',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.darkGreen,
-                    ),
-                  ),
-                  const Text(
-                    'Verify your account for instant discount',
-                    style: TextStyle(fontSize: 14, color: Colors.black87),
-                  ),
-                ],
-              ),
-            ),
-            TextButton(
-              onPressed: () => _showVerificationDialog(),
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.darkGreen,
-                foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Verify'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      return const SizedBox.shrink();
-    }
-  }
-
-  void _showVerificationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => const VerificationDialog(),
-    );
-  }
+ 
+ 
 }

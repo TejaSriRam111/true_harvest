@@ -1,11 +1,11 @@
-// lib/screens/auth/otp_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_new/controllers/auth_controller.dart';
-import 'package:task_new/screens/home_screen.dart';
+import 'package:task_new/screens/auth/registration_screen.dart';
 import 'package:task_new/screens/main_screen.dart';
 import 'package:task_new/utils/app_colors.dart';
 import 'package:task_new/utils/app_constants.dart';
+import 'package:task_new/widgets/custom_floating_toast.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   const OtpScreen({super.key});
@@ -21,7 +21,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   );
   final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
+  late final AuthProvider _authController=ref.read(authProvider);
 
   @override
   void dispose() {
@@ -34,45 +34,18 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     super.dispose();
   }
 
-  void _onOtpChanged(String value, int index) {
-    if (value.length == 1 && index < 5) {
-      _focusNodes[index + 1].requestFocus();
-    } else if (value.isEmpty && index > 0) {
-      _focusNodes[index - 1].requestFocus();
-    }
+ @override
+  void initState() {
+    super.initState();
+    // Focus on the first OTP field when screen loads
   }
 
-  Future<void> _verifyOtp() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      final otp = _otpControllers.map((e) => e.text).join();
-      final auth = ref.read(authProvider.notifier);
-
-      try {
-        await auth.verifyOTP(otp);
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error verifying OTP: $e')));
-        }
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
-      }
-    }
-  }
+  
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(authProvider);
+    final viewController = ref.watch(authProvider);
+    final isLoading = ref.watch(authProvider.select((val) => val.isLoading));
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAF3E6),
@@ -108,7 +81,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10.0),
                     child: Row(
-                      children: [Text("OTP sent to +91 ${auth.mobile}")],
+                      children: [Text("OTP sent to +91 ${_authController.mobileNumber}")],
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -144,18 +117,31 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  auth.timer > 0
-                      ? Text("Resend OTP in ${auth.timer}s")
+                  viewController.timer > 0
+                      ? Text("Resend OTP in ${viewController.timer}s")
                       : TextButton(
-                          onPressed: () =>
-                              ref.read(authProvider.notifier).resendOtp(),
+                          onPressed: () async {
+                            // call resend and show message
+                            final provider = ref.read(authProvider);
+                            final success = await provider.resendOtp();
+                            final message = provider.lastSendMessage ?? (success ? 'OTP sent' : 'Failed to send OTP');
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(message)),
+                              );
+                            }
+                          },
                           child: const Text("Resend OTP"),
                         ),
                   const SizedBox(height: 30),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _verifyOtp,
+                    child: Consumer(builder: (ctx, ref2, _) {
+                      final auth = ref2.watch(authProvider);
+                        final canVerify = !isLoading && auth.otpRequested && auth.mobileNumber.length == 10;
+
+                      return ElevatedButton(
+                        onPressed: canVerify ? _verifyOtp : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0D3B2E),
                         minimumSize: const Size(double.infinity, 56),
@@ -163,14 +149,16 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text(
-                              "Verify & Login",
-                              style: TextStyle(fontSize: 18),
-                            ),
+                        child: isLoading
+                            ? const CircularProgressIndicator()
+                            : const Text(
+                                "Verify & Login",
+                                style: TextStyle(fontSize: 18),
+                              ),
+                      );
+                    }),
                     ),
-                  ),
+                  
                   const SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -181,7 +169,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           color: AppColors.darkGreen,
                           width: 1,
                         ),
-
                         minimumSize: const Size(double.infinity, 56),
 
                         shape: RoundedRectangleBorder(
@@ -191,7 +178,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           horizontal: 20,
                           vertical: 12,
                         ),
-                        backgroundColor: Colors.transparent, // ensure no fill
+                        backgroundColor: Colors.transparent, 
                       ),
                       child: const Text(
                         "Change Number",
@@ -217,5 +204,46 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         ),
       ),
     );
+  }
+
+    void _onOtpChanged(String value, int index) {
+    if (value.length == 1 && index < 5) {
+      _focusNodes[index + 1].requestFocus();
+    } else if (value.isEmpty && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    }
+  }
+   Future<void> _verifyOtp() async {
+    if (_formKey.currentState!.validate()) {
+      final otp = _otpControllers.map((e) => e.text).join();
+
+        final ok = await _authController.verifyApiOtp(otp);
+        if (ok) {
+
+          if (mounted) {
+            if(ref.read(authProvider).userProfile != null && ref.read(authProvider).userProfile!.isFormFilled == true) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MainScreen()
+              ),
+            );
+
+          }} else {
+            // Navigate to registration screen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>  RegistrationScreen(
+                  phoneNumber: _authController.mobileNumber,
+                ),
+              ),
+            );
+          }
+        }else{
+          CustomFloatingToast.showToast('Invalid OTP. Please try again.');
+        }
+    
+    }
   }
 }

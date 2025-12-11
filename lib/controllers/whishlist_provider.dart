@@ -2,7 +2,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:task_new/models/product_model.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final wishlistProvider = ChangeNotifierProvider<WishlistProvider>(
   (ref) => WishlistProvider(),

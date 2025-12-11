@@ -1,47 +1,70 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:task_new/utils/app_constants.dart';
+import 'package:task_new/widgets/custom_floating_toast.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<void> sendOTP({
-    required String phoneNumber,
-    required Function(String, int?) codeSent,
-    required Function(FirebaseAuthException) verificationFailed,
-    required Function(PhoneAuthCredential) verificationCompleted,
-    required Function(String) codeAutoRetrievalTimeout,
+
+  Future<Map<String, dynamic>> sendWhatsAppOtp({
+    required String mobile,
+    required String appName,
   }) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: verificationCompleted,
-      verificationFailed: verificationFailed,
-      codeSent: codeSent,
-      codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
-      timeout: const Duration(seconds: 60),
-    );
+    final body = jsonEncode({'mobile': mobile, 'appName': appName});
+    try {
+      final response = await http.post(
+        Uri.parse(AppConstants.otpUrl),
+        headers: {HttpHeaders.contentTypeHeader: AppConstants.applicationJson},
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        if (data["user"] != null) {
+         return data;
+        }else{
+          return {};
+        }
+
+      }
+    } catch (error) {
+      debugPrint('OTP send error: $error');
+    }
+    return {};
   }
 
-  // 🔥 ADD THIS
-  Future<UserCredential> signInWithCredential(
-    PhoneAuthCredential credential,
-  ) async {
-    return await _auth.signInWithCredential(credential);
+ Future<Map<String, dynamic>> updateUserProfile({
+    required String mobile,
+    required Map<String, dynamic> profileData,
+  }) async {
+
+    try {
+      final body = jsonEncode(profileData);
+
+      final response = await http.put(
+        Uri.parse("https://markwave-live-apis-couipk45fa-el.a.run.app/users/$mobile"),
+        headers: {HttpHeaders.contentTypeHeader: AppConstants.applicationJson},
+        body: body,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        if (data['user'] != null) {
+          return data;
+        }
+
+      } else {
+        debugPrint('updateUserProfile failed: ${response.statusCode}');
+        return {};
+      }
+    } catch (e) {
+      debugPrint('updateUserProfile error: $e');
+      return {};
+    } 
+    return {};
   }
 
-  Future<UserCredential> verifyOTP(
-    String verificationId,
-    String smsCode,
-  ) async {
-    final AuthCredential credential = PhoneAuthProvider.credential(
-      verificationId: verificationId,
-      smsCode: smsCode,
-    );
-    return await _auth.signInWithCredential(credential);
-  }
 
-  Future<void> signOut() async {
-    await _auth.signOut();
-  }
-
-  User? get currentUser => _auth.currentUser;
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
 }

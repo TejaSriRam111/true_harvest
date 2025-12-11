@@ -8,8 +8,10 @@ class AppConstants {
   // API Configuration
   static const String apiUrl =
       'https://markwave-live-services-couipk45fa-el.a.run.app';
+      
   static const String applicationJson = "application/json";
-
+//OTP API
+static const otpUrl = 'https://markwave-live-apis-couipk45fa-el.a.run.app/otp/send-whatsapp';
   // Discount Configuration
   static const double minimumOrderForDiscount = 500.0;
   static const double discountPercentage = 0.10; // 10%

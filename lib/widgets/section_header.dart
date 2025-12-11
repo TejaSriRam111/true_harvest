@@ -1,17 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task_new/utils/app_colors.dart';
 
-/// A reusable section header widget with icon, title, and subtitle.
-/// Displays a green-tinted icon container with organized text labels.
-/// 
-/// Example:
-/// ```dart
-/// SectionHeader(
-///   icon: Icons.person_outline,
-///   title: 'Contact Information',
-///   subtitle: 'Your details for order updates',
-/// )
-/// ```
 class SectionHeader extends StatelessWidget {
   final IconData icon;
   final String title;

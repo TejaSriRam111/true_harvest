@@ -1,7 +1,6 @@
 // lib/widgets/quantity_handler.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart' hide Consumer;
 import 'package:task_new/controllers/cart_controller.dart';
 import 'package:task_new/models/cart_item.dart';
 import 'package:task_new/models/product_model.dart';

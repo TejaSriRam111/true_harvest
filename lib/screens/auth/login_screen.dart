@@ -2,12 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_new/controllers/auth_controller.dart';
+import 'package:task_new/controllers/location_provider.dart';
 import 'package:task_new/screens/auth/otp_screen.dart';
 import 'package:task_new/utils/app_colors.dart';
 import 'package:task_new/utils/app_constants.dart';
+import 'package:task_new/widgets/custom_floating_toast.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  LoginScreen({super.key});
+  const LoginScreen({super.key});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -16,7 +18,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _textController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final String _countryCode = '+91';
+  // country code is implied; API expects raw 10-digit mobile
   String? _phoneError;
 
   @override
@@ -25,35 +27,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _onSubmit() async {
-    if (_formKey.currentState!.validate()) {
-      final phoneNumber = '$_countryCode${_textController.text.trim()}';
-
-      try {
-        final codeSent = await ref.read(authProvider).sendOTP(phoneNumber);
-
-        if (!mounted) return;
-
-        if (codeSent) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const OtpScreen()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Failed to send OTP. Try again.")),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("Error: $e")));
-        }
-      }
-    }
-  }
-
+ 
   @override
   Widget build(BuildContext context) {
     final authViewController = ref.watch(authProvider);
@@ -116,10 +90,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Expanded(
                       child: TextField(
                         controller: _textController,
-                        keyboardType: TextInputType.number,
+                        keyboardType: TextInputType.phone,
                         maxLength: 10,
+                      
 
                         decoration: InputDecoration(
+                          
                           counterText: "",
                           filled: true,
                           fillColor: Colors.white,
@@ -128,20 +104,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
+                        
+                          
                           errorText: _phoneError,
                         ),
 
                         onChanged: (value) {
                           ref.read(authProvider).updateMobile(value);
-                          setState(() {
-                            if (value.isEmpty) {
-                              _phoneError = "Please enter your phone number";
-                            } else if (value.length < 10) {
-                              _phoneError = "Please enter a valid phone number";
-                            } else {
-                              _phoneError = null; // No error
-                            }
-                          });
+                          // setState(() {
+                          //   if (value.isEmpty) {
+                          //     _phoneError = "Please enter your phone number";
+                          //   } else if (value.length < 10) {
+                          //     _phoneError = "Please enter a valid phone number";
+                          //   } else {
+                          //     _phoneError = null; // No error
+                          //   }
+                          // });
                         },
                       ),
                     ),
@@ -153,11 +131,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ElevatedButton(
                   onPressed: isLoading
                       ? null
-                      : authViewController.mobile.length == 10
+                      : authViewController.mobileNumber.length == 10
                       ? _onSubmit
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: authViewController.mobile.length == 10
+                    backgroundColor: authViewController.mobileNumber.length == 10 && !isLoading
                         ? AppColors.darkGreen
                         : Colors.grey.shade400,
                     minimumSize: const Size(double.infinity, 56),
@@ -187,4 +165,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
+   void _onSubmit() async {
+    if (_formKey.currentState!.validate()) {
+      final rawMobile = _textController.text.trim();
+
+      try {
+        // Use raw 10-digit mobile (no +91 prefix) as requested
+        // ref.read(authProvider).updateMobile(rawMobile);
+
+        // Use API-based WhatsApp OTP flow with raw mobile
+        final sent = await ref.read(authProvider).sendOtpViaApi(rawMobile);
+
+        if (!mounted) return;
+
+        if (sent) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const OtpScreen()),
+          );
+                              Future(() => ref.read(locationProvider.notifier).getCurrentLocation());
+
+        } /* else {
+          CustomFloatingToast.showToast("Failed to send OTP. Try again.");
+        } */
+      } catch (e) {
+        if (mounted) {
+          CustomFloatingToast.showToast("Failed to send OTP. Try again.");
+ 
+        }
+      }
+    }
+  }
+
 }

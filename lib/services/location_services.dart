@@ -1,7 +1,7 @@
 // lib/services/location_service.dart
-import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:task_new/models/address_form_state.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:task_new/models/address_model.dart';
 
 class LocationService {
   // Get current location
@@ -55,37 +55,60 @@ class LocationService {
   }
 
   // Get detailed address components from coordinates as AddressFormState
-  static Future<AddressFormState> getDetailedAddressFromLatLng(Position position) async {
-    try {
-      final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
+  static Future<AddressModel> getDetailedAddressFromLatLng(Position position) async {
+  try {
+    final placemarks = await placemarkFromCoordinates(
+      position.latitude,
+      position.longitude,
+    );
 
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-        return AddressFormState(
-          street: place.street ?? '',
-          city: place.locality ?? '',
-          state: place.administrativeArea ?? '',
-          country: place.country ?? 'India',
-          zip: place.postalCode ?? '',
-          isCurrentLocation: true,
-        );
-      }
-      return AddressFormState(
-        city: 'Unknown',
-        state: 'Unknown',
-        country: 'India',
-        isCurrentLocation: true,
-      );
-    } catch (e) {
-      return AddressFormState(
-        city: 'Unknown',
-        state: 'Unknown',
-        country: 'India',
-        isCurrentLocation: true,
+    if (placemarks.isNotEmpty) {
+      final place = placemarks.first;
+      return AddressModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: '', // Will be filled by user
+      
+        street: place.street ?? '',
+        city: place.locality ?? place.subAdministrativeArea ?? '',
+        state: place.administrativeArea ?? '',
+        country: place.country ?? 'India',
+        zip: place.postalCode ?? '',
+        isDefault: false, // Let the address controller handle default status
+        deliveryInstructions: null, // Will be filled by user if needed
       );
     }
+    
+    // Return a default address model if no placemarks found
+    return AddressModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: '',
+    
+      street: '',
+      city: 'Unknown',
+      state: 'Unknown',
+      country: 'India',
+      zip: '',
+      isDefault: false,
+      deliveryInstructions: null,
+
+    );
+  } catch (e) {
+    // Return a default address model in case of any error
+    return AddressModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: '',
+     
+      street: '',
+    
+      city: 'Unknown',
+      state: 'Unknown',
+      country: 'India',
+      zip: '',
+      isDefault: false,
+      deliveryInstructions: null,
+    );
   }
 }
+}
+
+

@@ -9,11 +9,14 @@ class CustomTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final IconData? prefixIcon;
   final TextInputType keyboardType;
+  final bool readOnly;
+  final bool enabled;
   final bool isOptional;
   final int maxLines;
   final bool obscureText;
   final Widget? suffixIcon;
   final VoidCallback? onSuffixIconPressed;
+  final  Function(String)? onChanged;
 
   const CustomTextField({
     this.labelText,
@@ -26,7 +29,10 @@ class CustomTextField extends StatefulWidget {
     this.isOptional = false,
     this.maxLines = 1,
     this.obscureText = false,
+    this.readOnly = false,
+    this.enabled = true,
     this.suffixIcon,
+    this.onChanged,
     this.onSuffixIconPressed, required String label,
   });
 
@@ -54,7 +60,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             child: Text(
               widget.isOptional
                   ? '${widget.labelText} (Optional)'
-                  : '${widget.labelText} *',
+                  : '${widget.labelText} ',
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -66,8 +72,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
           controller: widget.controller,
           validator: widget.validator,
           keyboardType: widget.keyboardType,
+          onChanged: widget.onChanged,
           maxLines: widget.obscureText ? 1 : widget.maxLines,
           obscureText: _isObscured,
+          readOnly: widget.readOnly,
+          autovalidateMode:AutovalidateMode.onUserInteraction,
+          enabled: widget.enabled,
           decoration: InputDecoration(
             hintText: widget.hintText ?? '',
             hintStyle: TextStyle(
